@@ -1,6 +1,6 @@
 import { useState } from "preact/hooks";
 import { useTranslator } from "../../hooks/i18n.ts";
-import { setLang, setTheme } from "../../store/browser_var.ts";
+import { setLang, setTheme, setDebug } from "../../store/browser_var.ts";
 import { Drawer } from "../../components/drawer/drawer.tsx";
 import type { FunctionComponent } from "preact";
 import { FooterRecord } from "../../components/footer_record/footer_record.tsx";
@@ -25,6 +25,10 @@ export const TestPage: FunctionComponent = (_) => {
                     <button type="button" onClick={() => setTheme("dark")}>Dark</button>
                     <span></span>
                     <button type="button" onClick={() => setTheme("light")}>Light</button>
+                    <br />
+                    <button type="button" onClick={() => setDebug(true)}>Debug On</button>
+                    <span></span>
+                    <button type="button" onClick={() => setDebug(false)}>Debug Off</button>
                     <br />
                     <button type="button" onClick={() => setIsOpen(false)}>Close</button>
                 </div>

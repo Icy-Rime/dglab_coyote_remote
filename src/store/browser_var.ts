@@ -1,5 +1,5 @@
 import { persistentAtom } from "@nanostores/persistent";
-import { atom, onSet } from "nanostores";
+import { atom, computed, onSet } from "nanostores";
 
 type ThemeType = "light" | "dark";
 
@@ -43,7 +43,6 @@ export const setTheme = (newValue: ThemeType) => {
 })();
 
 /* ==== Language ==== */
-
 export const LANGUAGE_CODE_LIST = [
     "zh",
     "en",
@@ -79,4 +78,12 @@ export const $drawerNavOpen = atom(false);
 
 export const setDrawerNavOpen = (value: boolean) => {
     $drawerNavOpen.set(value);
+};
+
+/* ==== Debug ==== */ 
+const $debugInner = persistentAtom<"true" | "false">("_debug_", "false");
+export const $debug = computed($debugInner, value => value === "true");
+
+export const setDebug = (newValue: boolean) => {
+    $debugInner.set(newValue ? "true" : "false");
 };
