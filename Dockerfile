@@ -23,7 +23,7 @@ USER root
 # The port that your application listens to.
 
 COPY ./deno.jsonc ./deno.jsonc
-COPY --from=build_static ./dist ./dist
+COPY --from=build_static /app/dist ./dist
 COPY ./server ./server
 
 RUN ["deno", "cache", "./server/api.ts"]
