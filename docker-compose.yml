@@ -6,6 +6,8 @@ services:
     mem_limit: 128m
     ports:
       - "127.0.0.1:18970:18970"
+    env_file:
+      - 1panel.env
     logging:
         driver: "json-file"
         options:
