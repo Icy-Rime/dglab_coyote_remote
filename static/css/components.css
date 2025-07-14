@@ -1,0 +1,58 @@
+/* Overlay */
+
+.tinyui_overlay_container {
+    width: 0;
+    height: 0;
+}
+
+.tinyui_overlay_layer {
+    position: fixed;
+    z-index: 0;
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+}
+
+
+/* Drawer */
+.tinyui_drawer_bg_shadow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background-color: var(--pico-modal-overlay-background-color);
+}
+
+.tinyui_drawer_wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: start;
+}
+
+.tinyui_drawer_container {
+    background-color: var(--pico-background-color);
+    box-shadow: var(--pico-box-shadow);
+    border-radius: 0 0 var(--pico-border-radius) var(--pico-border-radius);
+}
+
+/* Icon */
+.tinyui_svg_icon {
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}

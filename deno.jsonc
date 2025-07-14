@@ -1,0 +1,57 @@
+{
+  // ok with deno 2.2.9
+  "tasks": {
+    "install_deps": "deno run --allow-all scripts/build.ts --release",
+    "watch": "deno run --allow-env --allow-net --allow-read=.,$HOME/.cache --allow-write=. --allow-run=$HOME/.cache/esbuild/bin/@esbuild-linux-x64@0.25.5 scripts/build.ts --watch",
+    "release": "deno run --allow-env --allow-net --allow-read=.,$HOME/.cache --allow-write=. --allow-run=$HOME/.cache/esbuild/bin/@esbuild-linux-x64@0.25.5 scripts/build.ts --release",
+    "serve": "deno serve --allow-env --allow-net --allow-read=.,$HOME/.cache --allow-write=. --allow-run=$HOME/.cache/esbuild/bin/@esbuild-linux-x64@0.25.5 scripts/build.ts"
+  },
+  "imports": {
+    "preact": "npm:preact@^10.26.9",
+    "nanostores": "npm:nanostores@^1.0.1",
+    "@nanostores/preact": "npm:@nanostores/preact@^1.0.0",
+    "@nanostores/persistent": "npm:@nanostores/persistent@^1.0.0",
+    "wouter-preact": "npm:wouter-preact@^3.7.1",
+    "workbox-core": "npm:workbox-core@^7.3.0",
+    "workbox-expiration": "npm:workbox-expiration@^7.3.0",
+    "workbox-routing": "npm:workbox-routing@^7.3.0",
+    "workbox-strategies": "npm:workbox-strategies@^7.3.0",
+    // dev deps
+    "@std/fs": "jsr:@std/fs@^1.0.18",
+    "@std/path": "jsr:@std/path@^1.1.0",
+    "@std/http": "jsr:@std/http@^1.0.19",
+    "esbuild": "https://deno.land/x/esbuild@v0.25.5/mod.js",
+    "@oazmi/esbuild-plugin-deno": "jsr:@oazmi/esbuild-plugin-deno@^0.4.1"
+  },
+  "nodeModulesDir": "auto",
+  "lock": false,
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+    "jsxFactory": "h",
+    "jsxFragmentFactory": "Fragment",
+    "strict": true,
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext",
+      "deno.ns"
+    ]
+  },
+  "fmt": {
+    "useTabs": false,
+    "lineWidth": 120,
+    "indentWidth": 4,
+    "semiColons": true,
+    "singleQuote": false,
+    "proseWrap": "preserve",
+    "include": [
+      "src/",
+      "scripts/"
+    ],
+    "exclude": [
+      "src/testdata/",
+      "src/fixtures/**/*.ts"
+    ]
+  }
+}

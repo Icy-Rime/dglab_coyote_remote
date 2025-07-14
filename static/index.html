@@ -1,0 +1,31 @@
+
+<!doctype html>
+<!-- <html data-theme="light"> -->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="css/pico.min.css">
+    <link rel="stylesheet" href="css/animate.min.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/site.css">
+    <style>
+      * {
+        transition-property: all;
+        transition-duration: 0.3s;
+        transition-behavior: allow-discrete;
+      }
+    </style>
+    <title>mysite</title>
+  </head>
+  <body id="app">
+  </body>
+  <script>
+    // load theme setting early
+    const theme = globalThis?.localStorage?.getItem("_theme_") ?? "";
+    if (theme) {
+      globalThis?.document.querySelector("html").setAttribute("data-theme", theme);
+    }
+  </script>
+  <script type="module" src="index.js"></script>
+</html>
