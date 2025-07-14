@@ -4,7 +4,7 @@
     "install_deps": "deno run --allow-all scripts/build.ts --release",
     "watch": "deno run --allow-env --allow-net --allow-read=.,$HOME/.cache --allow-write=. --allow-run=$HOME/.cache/esbuild/bin/@esbuild-linux-x64@0.25.5 scripts/build.ts --watch",
     "release": "deno run --allow-env --allow-net --allow-read=.,$HOME/.cache --allow-write=. --allow-run=$HOME/.cache/esbuild/bin/@esbuild-linux-x64@0.25.5 scripts/build.ts --release",
-    "serve": "deno serve --allow-env --allow-net --allow-read=.,$HOME/.cache --allow-write=. --allow-run=$HOME/.cache/esbuild/bin/@esbuild-linux-x64@0.25.5 scripts/build.ts"
+    "serve": "deno serve --watch --allow-read=dist server/api.ts"
   },
   "imports": {
     "preact": "npm:preact@^10.26.9",
@@ -47,7 +47,8 @@
     "proseWrap": "preserve",
     "include": [
       "src/",
-      "scripts/"
+      "scripts/",
+      "server/"
     ],
     "exclude": [
       "src/testdata/",
