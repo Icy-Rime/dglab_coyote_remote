@@ -18,7 +18,8 @@ const cachedRoute = new Route(
         }
         // console.log(url, sameOrigin);
         // return sameOrigin && !(["127.0.0.1", "localhost"].includes(url.hostname));
-        return sameOrigin;
+        // return sameOrigin && (!url.pathname.startsWith("/api/"));
+        return false;
     },
     new CacheFirst({
         cacheName: "cached-route",
