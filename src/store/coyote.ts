@@ -62,7 +62,7 @@ export const setRemoteConfigText = (newValue: string) => {
 };
 
 export const resetRemoteConfigText = () => {
-    $remoteConfigText.set(JSON.stringify(makeDefaultRemoteConfig()));
+    $remoteConfigText.set(JSON.stringify(makeDefaultRemoteConfig(), undefined, 2));
 };
 
 export const $remoteConfig = atom(makeDefaultRemoteConfig());
