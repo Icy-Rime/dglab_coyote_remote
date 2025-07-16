@@ -56,3 +56,39 @@
   stroke-linejoin: round;
   fill: none;
 }
+
+/* Toast */
+.tinyui_toast_wrapper {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  padding-bottom: 20vh;
+  align-items: end;
+  justify-content: center;
+}
+
+.tinyui_toast_inner {
+    flex: "0 0 auto";
+    border-radius: var(--pico-border-radius);
+    padding: var(--pico-spacing);
+    background-color: var(--pico-background-color);
+    box-shadow: var(--pico-box-shadow);
+    color: var(--pico-color);
+    word-break: break-word;
+    transition: none;
+}
+
+.tinyui_toast_inner[data-type="success"] {
+    background-color: #398712;
+    color: white;
+}
+
+.tinyui_toast_inner[data-type="error"] {
+    background-color: #D93526;
+    color: white;
+}
+
+.tinyui_toast_inner[data-type="warn"] {
+    background-color: #FF9500;
+    color: white;
+}

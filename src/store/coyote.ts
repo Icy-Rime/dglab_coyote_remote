@@ -96,6 +96,9 @@ export const connectToEventSource = () => {
     const eventSource = new EventSource(url);
     eventSource.addEventListener("message", (evt) => {
         console.log("message:", evt.data);
+        if (!$device.get()?.connected) {
+            return; // not connected, ignore all command.
+        }
         const remoteConfig = $remoteConfig.get(); // get current config
         const cfga: SingleChannelRemoteConfig = remoteConfig?.a ?? {};
         const cfgb: SingleChannelRemoteConfig = remoteConfig?.b ?? {};

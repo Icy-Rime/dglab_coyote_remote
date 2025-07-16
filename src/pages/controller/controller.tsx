@@ -8,6 +8,7 @@ import type { WaveDataGenerator } from "../../utils/coyote_ble.ts";
 import { $device, coyote } from "../../store/coyote.ts";
 import { $remoteConfigText, resetRemoteConfigText, setRemoteConfigText } from "../../store/coyote.ts";
 import { applyRemoteConfig, connectToEventSource } from "../../store/coyote.ts";
+import { useToast } from "../../components/toast/toast.tsx";
 
 const testWaveGenerator: WaveDataGenerator = {
     generateV3Wave: (_timeMs) => {
@@ -19,6 +20,7 @@ coyote.setWaveGeneratorA(testWaveGenerator);
 coyote.setWaveGeneratorB(testWaveGenerator);
 
 export const ControllerPage: FunctionComponent = (_) => {
+    const toast = useToast();
     const remoteConfigText = useStore($remoteConfigText);
     const device = useStore($device);
     const t = useTranslator();
@@ -32,21 +34,23 @@ export const ControllerPage: FunctionComponent = (_) => {
     }, [device]);
     const applyRemoteConfigWrapper = useMemo(() => () => {
         if (applyRemoteConfig()) {
+            toast(t({ zh: "配置已应用", en: "Configuration applied." }), "success")
             return true;
         } else {
-            alert(t({ zh: "JSON格式错误", en: "JSON Error" }));
+            toast(t({ zh: "JSON格式错误", en: "JSON Error" }), "error");
             return false;
         }
     }, [applyRemoteConfig, t]);
     const connectToEventSourceWrapper = useMemo(() => () => {
         if (!applyRemoteConfig()) {
-            alert(t({ zh: "JSON格式错误", en: "JSON Error" }));
+            toast(t({ zh: "JSON格式错误", en: "JSON Error" }));
             return false;
         }
         if (connectToEventSource()) {
+            toast(t({ zh: "已连接到远程服务器", en: "Connected to the remote server" }), "success")
             return true;
         } else {
-            alert(t({ zh: "entryName 不能为空", en: "entryName can not be empty" }));
+            toast(t({ zh: "entryName 不能为空", en: "entryName can not be empty" }), "error");
             return false;
         }
     }, [applyRemoteConfig, t]);
