@@ -5,10 +5,11 @@ import { useMergedClassName } from "../utils.ts";
 
 export type OverlayHookOptions = {
     children?: ComponentChildren;
-    isOpen?: boolean;
 } & JSX.HTMLAttributes<HTMLDivElement>;
 
-export type OverlayProps = OverlayHookOptions;
+export type OverlayProps = OverlayHookOptions & {
+    isOpen?: boolean;
+};
 
 type OverlayRootProps = Omit<OverlayProps, "isOpen">;
 
@@ -23,7 +24,7 @@ const OverlayRoot: FunctionComponent<OverlayRootProps> = (props: OverlayRootProp
 
 export const useOverlay = (props: OverlayHookOptions = {}) => {
     const rootRef = useRef<HTMLDivElement | null>(null);
-    const [isOpen, setIsOpen] = useState(props.isOpen ?? false);
+    const [isOpen, setIsOpen] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
@@ -53,12 +54,6 @@ export const useOverlay = (props: OverlayHookOptions = {}) => {
         }
     }, [props]);
 
-    useEffect(() => {
-        if ((props.isOpen ?? false) !== isOpen) {
-            setIsOpen(props.isOpen ?? false);
-        }
-    }, [props.isOpen]);
-
     const api = useMemo(() => {
         return {
             setIsOpen,
@@ -70,7 +65,16 @@ export const useOverlay = (props: OverlayHookOptions = {}) => {
 };
 
 export const Overlay: FunctionComponent<OverlayProps> = (props: OverlayProps = {}) => {
-    const _ = useOverlay(props);
+    const api = useOverlay(props);
+
+    useEffect(() => {
+        if (props.isOpen) {
+            api.open();
+        } else {
+            api.close();
+        }
+    }, [props.isOpen]);
+
     return null;
 };
 

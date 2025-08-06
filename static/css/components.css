@@ -1,5 +1,30 @@
-/* Overlay */
+* {
+    --tinyui-colorful-text-color: #FFF;
+    --tinyui-success-color: #398712; /* pico-color-green-500 */
+    --tinyui-error-color: #D93526; /* pico-color-red-500 */
+    --tinyui-warn-color: #FF9500; /* pico-color-pumpkin-300 */
+}
 
+:not(form) button[type="button"] {
+    margin-bottom: 0;
+}
+
+:is(div):is([data-type="success"]) {
+    background-color: var(--tinyui-success-color);
+    color: var(--tinyui-colorful-text-color);
+}
+
+:is(div):is([data-type="error"]) {
+    background-color: var(--tinyui-error-color);
+    color: var(--tinyui-colorful-text-color);
+}
+
+:is(div):is([data-type="warn"]) {
+    background-color: var(--tinyui-warn-color);
+    color: var(--tinyui-colorful-text-color);
+}
+
+/* Overlay */
 .tinyui_overlay_container {
     width: 0;
     height: 0;
@@ -16,7 +41,6 @@
     left: 0;
     overflow: hidden;
 }
-
 
 /* Drawer */
 .tinyui_drawer_bg_shadow {
@@ -78,17 +102,65 @@
     transition: none;
 }
 
-.tinyui_toast_inner[data-type="success"] {
-    background-color: #398712;
-    color: white;
+/* Dialog */
+.tinyui_dialog_bg_shadow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background-color: var(--pico-modal-overlay-background-color);
 }
 
-.tinyui_toast_inner[data-type="error"] {
-    background-color: #D93526;
-    color: white;
+.tinyui_dialog_wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--pico-spacing);
 }
 
-.tinyui_toast_inner[data-type="warn"] {
-    background-color: #FF9500;
-    color: white;
+.tinyui_dialog_container {
+    background-color: var(--pico-background-color);
+    box-shadow: var(--pico-box-shadow);
+    border-radius: var(--pico-border-radius);
+}
+
+.tinyui_dialog_header {
+    border-bottom: var(--pico-border-width) solid var(--pico-card-border-color);
+    padding: var(--pico-spacing);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.tinyui_dialog_header>:is(h1, h2, h3, h4, h5, h6) {
+    margin-bottom: 0;
+}
+
+.tinyui_dialog_header_close {
+    cursor: pointer;
+    border-radius: var(--pico-border-radius);
+    border: none;
+    background-color: transparent;
+    color: inherit;
+}
+
+.tinyui_dialog_header_close:is(:hover, :focus) {
+    background-color: var(--tinyui-error-color);
+    color: var(--tinyui-colorful-text-color);
+}
+
+.tinyui_dialog_footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--pico-spacing);
 }

@@ -17,11 +17,9 @@ export const useToast = () => {
     const [toastLength, setToastLength] = useState("short" as ToastLength);
     const [text, setText] = useState("");
     const [isOpen, setIsOpen] = useState(false);
-    const [overlayOpen, setOverlayOpen] = useState(false);
 
     // overlay
-    const _ = useOverlay({
-        isOpen: overlayOpen,
+    const ovl = useOverlay({
         style: { pointerEvents: "none" },
         children: (
             <div class={isOpen ? CLASS_NAME_OPENING[0] : CLASS_NAME_CLOSING[0]}>
@@ -39,7 +37,7 @@ export const useToast = () => {
         } else {
             // close
             timer = timer = setTimeout(() => {
-                setOverlayOpen(false);
+                ovl.close();
             }, 500);
         }
         return () => {
@@ -56,7 +54,7 @@ export const useToast = () => {
         setText(msg);
         setToastType(type);
         setToastLength(length);
-        setOverlayOpen(true);
         setIsOpen(true);
+        ovl.open();
     };
 };
