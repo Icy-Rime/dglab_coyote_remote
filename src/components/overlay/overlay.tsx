@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { h, render } from "preact";
-import type { ComponentChildren, FunctionComponent, JSX } from "preact";
+import type { ComponentChildren, FunctionComponent, HTMLAttributes } from "preact";
 import { useMergedClassName } from "../utils.ts";
 
 export type OverlayHookOptions = {
     children?: ComponentChildren;
-} & JSX.HTMLAttributes<HTMLDivElement>;
+} & HTMLAttributes<HTMLDivElement>;
 
 export type OverlayProps = OverlayHookOptions & {
     isOpen?: boolean;

@@ -1,7 +1,7 @@
-import type { FunctionComponent, JSX } from "preact";
+import type { FunctionComponent, HTMLAttributes } from "preact";
 import { useMergedClassName } from "../utils.ts";
 
-export type FooterRecordProps = JSX.HTMLAttributes<HTMLDivElement>;
+export type FooterRecordProps = HTMLAttributes<HTMLDivElement>;
 
 export const FooterRecord: FunctionComponent<FooterRecordProps> = (props: FooterRecordProps) => {
     const className = useMergedClassName("mysite_footer_record_container", props.class);

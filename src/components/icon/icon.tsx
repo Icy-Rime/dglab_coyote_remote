@@ -1,9 +1,9 @@
-import type { FunctionComponent, JSX } from "preact";
+import type { FunctionComponent, SVGAttributes } from "preact";
 import type { IconName } from "./feather_icon_name.d.ts";
 import { useMemo } from "preact/hooks";
 import { useMergedClassName } from "../utils.ts";
 
-export type IconProps = JSX.SVGAttributes<SVGSVGElement> & {
+export type IconProps = SVGAttributes<SVGSVGElement> & {
     name: IconName;
 };
 

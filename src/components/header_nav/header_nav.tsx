@@ -1,11 +1,11 @@
-import type { FunctionComponent, JSX } from "preact";
+import type { FunctionComponent, HTMLAttributes } from "preact";
 import { useMemo } from "preact/hooks";
 import { useLocation } from "wouter-preact";
 import { useMergedClassName } from "../utils.ts";
 import { Icon } from "../icon/icon.tsx";
 import { setDrawerNavOpen } from "../../store/browser_var.ts";
 
-export type HeaderNavProps = JSX.HTMLAttributes<HTMLDivElement> & {
+export type HeaderNavProps = HTMLAttributes<HTMLDivElement> & {
     title?: string;
 };
 

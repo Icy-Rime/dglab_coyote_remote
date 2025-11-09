@@ -1,9 +1,9 @@
 import { Overlay } from "../overlay/overlay.tsx";
 import { useMergedClassName } from "../utils.ts";
 import { useEffect, useMemo, useState } from "preact/hooks";
-import type { ComponentChildren, FunctionComponent, JSX } from "preact";
+import type { ComponentChildren, FunctionComponent, HTMLAttributes } from "preact";
 
-export type DrawerProps = JSX.HTMLAttributes<HTMLDivElement> & {
+export type DrawerProps = HTMLAttributes<HTMLDivElement> & {
     /** open status */
     isOpen?: boolean;
     /** callback when closed by the inner component, usually () => setIsOpen(false) */

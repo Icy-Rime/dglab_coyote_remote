@@ -1,11 +1,11 @@
-import type { ComponentChildren, FunctionComponent, JSX } from "preact";
+import type { ComponentChildren, FunctionComponent, HTMLAttributes } from "preact";
 import { useOverlay } from "../overlay/overlay.tsx";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { useMergedClassName } from "../utils.ts";
 import { useCommonTranslator } from "../i18n.ts";
 import Icon from "../icon/icon.tsx";
 
-export type DialogHookProps = JSX.HTMLAttributes<HTMLElement> & {
+export type DialogHookProps = HTMLAttributes<HTMLElement> & {
     onCancel?: () => void;
     onConfirm?: () => void;
     title?: ComponentChildren;

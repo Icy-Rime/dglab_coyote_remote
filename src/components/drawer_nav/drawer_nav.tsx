@@ -1,4 +1,4 @@
-import type { FunctionComponent, JSX } from "preact";
+import type { FunctionComponent, HTMLAttributes } from "preact";
 import { $drawerNavOpen, setDrawerNavOpen } from "../../store/browser_var.ts";
 import { useStore } from "@nanostores/preact";
 import { Icon } from "../icon/icon.tsx";
@@ -6,7 +6,7 @@ import { useTranslator } from "../../hooks/i18n.ts";
 import { Drawer } from "../drawer/drawer.tsx";
 import { $isLogined, $username } from "../../store/user_info.ts";
 
-export type DrawerNavProps = JSX.HTMLAttributes;
+export type DrawerNavProps = HTMLAttributes;
 
 export const DrawerNav: FunctionComponent<DrawerNavProps> = (_: DrawerNavProps) => {
     const drawerNavOpen = useStore($drawerNavOpen);

@@ -7,7 +7,7 @@
     "serve": "deno serve --watch --allow-read=dist server/api.ts"
   },
   "imports": {
-    "preact": "npm:preact@^10.26.9",
+    "preact": "npm:preact@^10.27.2",
     "nanostores": "npm:nanostores@^1.0.1",
     "@nanostores/preact": "npm:@nanostores/preact@^1.0.0",
     "@nanostores/persistent": "npm:@nanostores/persistent@^1.0.0",

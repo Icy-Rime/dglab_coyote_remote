@@ -1,13 +1,13 @@
 import { useMemo } from "preact/hooks";
-import type { JSX } from "preact";
+import type { Signalish, CSSProperties } from "preact";
 
-type ReactCSSProperties = JSX.Signalish<string | JSX.CSSProperties | undefined>;
+type ReactCSSProperties = Signalish<string | CSSProperties | undefined>;
 
 export const styleIsDOMCSSProperties = (style: ReactCSSProperties) => {
     if (!style) return false; // undefined | null | empty
     if (typeof style === "string") return false; // string
-    if (typeof style.peek === "function" || typeof style.subscribe === "function") return false; // JSX.SignalLike
-    if (typeof (style as JSX.CSSProperties).cssText === "string") return false; // JSX.CSSProperties
+    if (typeof style.peek === "function" || typeof style.subscribe === "function") return false; // SignalLike
+    if (typeof (style as CSSProperties).cssText === "string") return false; // CSSProperties
     return true;
 };
 
@@ -71,7 +71,7 @@ export const useMergedStyle = (lowerStyle: ReactCSSProperties, upperStyle: React
     return style;
 };
 
-export const useMergedClassName = (className1: JSX.Signalish<string | undefined>, className2: JSX.Signalish<string | undefined>) => {
+export const useMergedClassName = (className1: Signalish<string | undefined>, className2: Signalish<string | undefined>) => {
     const classNames = useMemo(() => {
         if (typeof className1 !== "string") {
             className1 = "";
