@@ -8,3 +8,10 @@
 * WorkerBox (ServiceWorker)
 * Pico.css
 * Animate.css
+
+# Server Config
+
+## Env
+
+* ALLOW_SL_USER_AGENT_PART
+* SL_REQUEST_SIGN_KEY
