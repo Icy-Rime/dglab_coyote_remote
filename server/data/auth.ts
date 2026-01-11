@@ -1,0 +1,107 @@
+import { getKv, wrapKvOperation } from "./kv.ts";
+import { TimedStore } from "./timed_store.ts";
+import { monotonicUlid, ulid } from "@std/ulid";
+
+const D_AUTH_PREFIX = "auth";
+const D_BY_TOKEN = "avatar_by_token";
+const D_BY_AVATAR = "token_by_avatar";
+const CODE_EXPIRE_MS = 5 * 60_000; // 5 min
+const AUTH_TOKEN_EXPIRE_MS = 7 * 24 * 3600_000; // 7 days
+const SESSION_EXPIRE_MS = 60 * 60_000; // 60 min
+
+interface AuthTokenInfo {
+    token: string;
+    expireAt: number;
+}
+
+const codeStore = new TimedStore<string>();
+codeStore.startClearTask(60_000);
+const sessionStore = new TimedStore<string>();
+sessionStore.startClearTask(30 * 60_000);
+
+const randomAuthCode = () => {
+    // generate 16 random hex number
+    const arr = new Uint8Array(8);
+    globalThis.crypto.getRandomValues(arr);
+    const code = Array.from(arr).map((v) => v.toString(16).padStart(2, "0")).join("").toUpperCase();
+    return code;
+};
+
+export const startCodeAuth = (avatarKey: string) => {
+    const code = randomAuthCode();
+    codeStore.set(code, avatarKey, Date.now() + CODE_EXPIRE_MS); // 5 min
+    return code;
+};
+
+export const authByCode = (code: string) => {
+    const avatarKey = codeStore.get(code);
+    if (avatarKey) {
+        codeStore.delete(code);
+    }
+    return avatarKey;
+};
+
+export const createAuthToken = wrapKvOperation(async (avatarKey: string) => {
+    const authId = monotonicUlid();
+    const token = ulid();
+    const kv = getKv();
+    const expireAt = Date.now() + AUTH_TOKEN_EXPIRE_MS;
+    await kv.atomic()
+        .set([D_AUTH_PREFIX, D_BY_AVATAR, avatarKey, authId], {
+            token,
+            expireAt,
+        } as AuthTokenInfo, { expireIn: AUTH_TOKEN_EXPIRE_MS })
+        .set([D_AUTH_PREFIX, D_BY_TOKEN, authId], avatarKey, { expireIn: AUTH_TOKEN_EXPIRE_MS })
+        .commit();
+    return {
+        authId,
+        token,
+    };
+});
+
+export const authByToken = async (authId: string, token: string) => {
+    const kv = getKv();
+    const avatarKeyResult = await kv.get<string>([D_AUTH_PREFIX, D_BY_TOKEN, authId]);
+    if (avatarKeyResult.value) {
+        const avatarKey = avatarKeyResult.value;
+        const tokenResult = await kv.get<AuthTokenInfo>([D_AUTH_PREFIX, D_BY_AVATAR, avatarKey, authId]);
+        if (tokenResult.value?.token === token && tokenResult.value.expireAt >= Date.now()) {
+            return avatarKey;
+        }
+    }
+    return undefined;
+};
+
+export const refreshAuthToken = wrapKvOperation(async (avatarKey: string, authId: string) => {
+    const kv = getKv();
+    const expireAt = Date.now() + AUTH_TOKEN_EXPIRE_MS;
+    const tokenResult = await kv.get<AuthTokenInfo>([D_AUTH_PREFIX, D_BY_AVATAR, avatarKey, authId]);
+    if (tokenResult.value) {
+        const token = tokenResult.value.token;
+        const kv = getKv();
+        await kv.atomic()
+            .set([D_AUTH_PREFIX, D_BY_AVATAR, avatarKey, authId], {
+                token,
+                expireAt,
+            } as AuthTokenInfo, { expireIn: AUTH_TOKEN_EXPIRE_MS })
+            .set([D_AUTH_PREFIX, D_BY_TOKEN, authId], avatarKey, { expireIn: AUTH_TOKEN_EXPIRE_MS })
+            .commit();
+        return true;
+    }
+    return false;
+});
+
+export const createSession = (avatarKey: string) => {
+    const sessionId = ulid();
+    sessionStore.set(sessionId, avatarKey, Date.now() + SESSION_EXPIRE_MS);
+    return sessionId;
+};
+
+export const authBySession = (sessionId: string) => {
+    const av = sessionStore.get(sessionId);
+    if (av) {
+        sessionStore.set(sessionId, av, Date.now() + SESSION_EXPIRE_MS); // refresh expire time
+        return av;
+    }
+    return undefined;
+};

@@ -1,11 +1,13 @@
 import { emitEvent, pingListener, startKeepliveTask, startListen } from "./listeners.ts";
 import { serveDir } from "@std/http";
+import { authBySession } from "./data/auth.ts";
+import { authFromSecondLifeRequest } from "./utils/avatar.ts";
 
 const FIELD_CONTENT_MAX_LENGTH = 16384;
 const STATIC_DIR = "dist";
 
-const response = (code = 200, data = "") => {
-    if (typeof data !== "string") {
+const response = (code = 200, data: unknown = undefined) => {
+    if (data === undefined) {
         switch (code) {
             case 200:
                 data = "Ok";
@@ -27,9 +29,11 @@ const response = (code = 200, data = "") => {
     return new Response(
         JSON.stringify({ code, data }),
         {
+            status: code,
             headers: {
                 // "Access-Control-Allow-Origin": "*",
-                "Content-Type": "text/plain",
+                // "Content-Type": "text/plain",
+                "Content-Type": "application/json",
             },
         },
     );
@@ -64,16 +68,24 @@ const handler: Deno.ServeHandler = async (req, _) => {
         }
         return response(404);
     } else if (req.method.toUpperCase() === "GET") {
-        if (path.startsWith("/api/listen/")) {
-            const uid = path.substring("/api/listen/".length);
-            if (uid.length <= 0 || uid.indexOf("/") >= 0) {
-                return response(400);
+        // if (path.startsWith("/api/listen/")) {
+        //     const uid = path.substring("/api/listen/".length);
+        //     if (uid.length <= 0 || uid.indexOf("/") >= 0) {
+        //         return response(400);
+        //     }
+        //     const resp = startListen(uid);
+        //     if (resp) {
+        //         return resp;
+        //     }
+        //     return response(409);
+        // }
+        if (path.startsWith("/api/me")) {
+            // try to auth user
+            const authSL = await authFromSecondLifeRequest(req);
+            if (authSL) {
+                return response(200, authSL);
             }
-            const resp = startListen(uid);
-            if (resp) {
-                return resp;
-            }
-            return response(409);
+            return response(403);
         }
 
         return await serveDir(req, {

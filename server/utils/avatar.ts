@@ -44,7 +44,7 @@ export const authFromSecondLifeRequest = async (req: Request) => {
         return undefined; // wrong time format
     }
     if (Math.abs(currentTimeSec - signTimeSec) > 30) {
-        return undefined; // timeout
+        return undefined; // timeout 30 sec
     }
     // check sign
     const authed = await hmac512Base64Verify(
