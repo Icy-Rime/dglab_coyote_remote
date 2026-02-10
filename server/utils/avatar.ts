@@ -1,16 +1,39 @@
+import { authBySession } from "../data/auth.ts";
 import { hmac512Base64Verify } from "./hmac.ts";
 
 export interface Avatar {
+    authed: boolean;
     avatarKey: string;
-    avatarName: string;
     fromSL: boolean;
     isAdmin: boolean;
+    avatarName?: string;
 }
 
-export const authFromSecondLifeRequest = async (req: Request) => {
+export const ANONYMOUS_AVATAR: Avatar = {
+    authed: false,
+    avatarKey: "",
+    fromSL: false,
+    isAdmin: false,
+};
+
+const getEnvVars = () => {
     const SL_REQUEST_SIGN_KEY = Deno.env.get("SL_REQUEST_SIGN_KEY") ?? "key";
     const ALLOW_SL_USER_AGENT_PART = Deno.env.get("ALLOW_SL_USER_AGENT_PART") ??
         "(Unknown)";
+    const SL_ADMIN_LIST = new Set(
+        (Deno.env.get("SL_ADMIN_LIST") ?? "")
+            .split(",").map((item) => item.trim())
+            .filter((item) => item.length > 0),
+    );
+    return {
+        SL_REQUEST_SIGN_KEY,
+        ALLOW_SL_USER_AGENT_PART,
+        SL_ADMIN_LIST,
+    };
+};
+
+export const authFromSecondLifeRequest = async (req: Request) => {
+    const { SL_REQUEST_SIGN_KEY, ALLOW_SL_USER_AGENT_PART, SL_ADMIN_LIST } = getEnvVars();
     const headers = req.headers;
     const avatarKey = headers.get("x-secondlife-owner-key") ?? "";
     const avatarName = headers.get("x-secondlife-owner-name") ?? "";
@@ -55,9 +78,42 @@ export const authFromSecondLifeRequest = async (req: Request) => {
     if (authed) {
         // authed
         return {
+            authed: true,
             avatarKey,
+            fromSL: true,
+            isAdmin: SL_ADMIN_LIST.has(avatarKey),
             avatarName,
         } as Avatar;
     }
     return undefined;
+};
+
+export const authFromSession = (req: Request) => {
+    const { SL_ADMIN_LIST } = getEnvVars();
+    const session = req.headers.get("x-session") ?? "";
+    if (session.length === 0) {
+        return undefined;
+    }
+    const avatarKey = authBySession(session);
+    if (avatarKey === undefined) {
+        return undefined;
+    }
+    return {
+        authed: true,
+        avatarKey,
+        fromSL: false,
+        isAdmin: SL_ADMIN_LIST.has(avatarKey),
+    } as Avatar;
+};
+
+export const authFromRequest = async (req: Request) => {
+    let avatar = await authFromSecondLifeRequest(req);
+    if (avatar !== undefined) {
+        return avatar;
+    }
+    avatar = authFromSession(req);
+    if (avatar !== undefined) {
+        return avatar;
+    }
+    return { ...ANONYMOUS_AVATAR };
 };
