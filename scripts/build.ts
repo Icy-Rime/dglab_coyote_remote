@@ -143,6 +143,7 @@ if (import.meta.main) {
     if (Deno.args.includes("--watch")) {
         await watch();
     }
+    Deno.exit(0);
 }
 
 // deno serve
