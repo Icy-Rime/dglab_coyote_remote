@@ -1,10 +1,11 @@
 {
-  // ok with deno 2.2.9
+  // ok with deno 2.6.8
   "tasks": {
-    "install_deps": "deno run --allow-all scripts/build.ts --release",
+    "install_deps": "deno run --allow-all scripts/build.ts --install-deps",
+    "docker_build": "deno run --allow-all scripts/build.ts --release",
     "watch": "deno run --allow-env --allow-net --allow-read=.,$HOME/.cache --allow-write=. --allow-run=$HOME/.cache/esbuild/bin/@esbuild-linux-x64@0.25.5 scripts/build.ts --watch",
     "release": "deno run --allow-env --allow-net --allow-read=.,$HOME/.cache --allow-write=. --allow-run=$HOME/.cache/esbuild/bin/@esbuild-linux-x64@0.25.5 scripts/build.ts --release",
-    "serve": "deno serve --watch --allow-read=dist --allow-env server/api.ts",
+    "serve": "deno serve --watch --allow-read=dist,datakv.db --allow-write=datakv.db --allow-env server/api.ts",
     "test": "deno test --ignore=src/pages --allow-env=SL_REQUEST_SIGN_KEY,ALLOW_SL_USER_AGENT_PART"
   },
   "unstable": [

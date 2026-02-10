@@ -57,7 +57,8 @@ const build = async () => {
 
     // build js
     const result = await esbuild.build({
-        plugins: [entry_plugin, http_plugin, jsr_plugin, npm_plugin, resolver_pipeline_plugin],
+        // deno-lint-ignore no-explicit-any
+        plugins: [entry_plugin, http_plugin, jsr_plugin, npm_plugin, resolver_pipeline_plugin] as any,
         entryPoints: entryPoints,
         outdir: BUILD_DIR,
         bundle: true,
@@ -106,7 +107,38 @@ const watch = async () => {
     }
 };
 
+async function install_deps() {
+    // call esbuild, cache executable file
+    const tempDir = await Deno.makeTempDir();
+    try {
+        const tempFile = await Deno.makeTempFile({ dir: tempDir, suffix: ".ts" });
+        try {
+            await Deno.writeTextFile(tempFile, "console.log('hello world');");
+            // install esbuild
+            const result = await esbuild.build({
+                entryPoints: [tempFile],
+                bundle: true,
+                outdir: tempDir,
+            });
+            await esbuild.stop();
+            if (result?.errors) {
+                for (const msg of result.errors) {
+                    console.error(msg);
+                }
+            }
+        } finally {
+            await Deno.remove(tempFile);
+        }
+    } finally {
+        await Deno.remove(tempDir, { recursive: true });
+    }
+}
+
 if (import.meta.main) {
+    if (Deno.args.includes("--install-deps")) {
+        await install_deps();
+        Deno.exit(0);
+    }
     await build();
     if (Deno.args.includes("--watch")) {
         await watch();
