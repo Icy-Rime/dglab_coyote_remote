@@ -3,7 +3,7 @@ services:
   dglab_coyote_remote:
     build: .
     restart: unless-stopped
-    mem_limit: 128m
+    mem_limit: 512m
     ports:
       - "127.0.0.1:18970:18970"
     env_file:
