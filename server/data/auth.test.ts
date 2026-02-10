@@ -2,7 +2,7 @@ import { assert } from "@std/assert";
 import { FakeTime } from "@std/testing/time";
 const time = new FakeTime(); // fake time before anyother
 import { initKv, closeKv } from "./kv.ts";
-import { startCodeAuth, authByCode } from "./auth.ts";
+import { startCodeAuth, authByCode, expireAllAuth } from "./auth.ts";
 import { createAuthToken, authByToken, refreshAuthToken } from "./auth.ts";
 import { createSession, authBySession } from "./auth.ts";
 
@@ -55,6 +55,16 @@ Deno.test("data/auth", async (t) => {
         // test expire
         time.tick(70 * 60_000);
         assert(authBySession(session) === undefined);
+    });
+    await t.step("expireAllAuth", async () => {
+        const code = startCodeAuth(avatarKey);
+        const session = createSession(avatarKey);
+        const authInfo = await createAuthToken(avatarKey);
+        // test expire
+        await expireAllAuth(avatarKey);
+        assert(authByCode(code) === undefined);
+        assert(authBySession(session) === undefined);
+        assert(await authByToken(authInfo.authId, authInfo.token) === undefined);
     });
     closeKv();
 });
