@@ -6,8 +6,8 @@ import { useCommonTranslator } from "../i18n.ts";
 import Icon from "../icon/icon.tsx";
 
 export type DialogHookProps = HTMLAttributes<HTMLElement> & {
-    onCancel?: () => void;
-    onConfirm?: () => void;
+    onCancel?: () => unknown;
+    onConfirm?: () => unknown;
     title?: ComponentChildren;
     showCloseButton?: boolean;
     clickOutsideCancel?: boolean;
@@ -74,15 +74,17 @@ export const useDialog = (props: DialogHookProps) => {
                                 </header>
                             )}
 
-                        {props.children}
-                        <footer class="tinyui_dialog_footer">
-                            {props.footer ? props.footer : (
-                                <>
-                                    <button type="button" class="secondary" onClick={onCancel}>{t.cancel}</button>
-                                    <button type="button" class="primary" onClick={onConfirm}>{t.confirm}</button>
-                                </>
-                            )}
-                        </footer>
+                        <div class="tinyui_dialog_body">{props.children}</div>
+                        {(typeof props.footer === "boolean" && props.footer === false) ? null :
+                            <footer class="tinyui_dialog_footer">
+                                {props.footer ? props.footer : (
+                                    <>
+                                        <button type="button" class="secondary" onClick={onCancel}>{t.cancel}</button>
+                                        <button type="button" class="primary" onClick={onConfirm}>{t.confirm}</button>
+                                    </>
+                                )}
+                            </footer>
+                        }
                     </article>
                 </div>
             </>
