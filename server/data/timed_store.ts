@@ -47,7 +47,19 @@ export class TimedStore<T> {
             this.#store.delete(key);
         }
     }
-    
+
+    deleteAllValues(value: T) {
+        const keyToDelete = new Set<string>();
+        for (const [key, item] of this.#store) {
+            if (item.value === value) {
+                keyToDelete.add(key);
+            }
+        }
+        for (const key of keyToDelete) {
+            this.delete(key);
+        }
+    }
+
     checkAndClearExpiredItems() {
         const now = Date.now();
         const expiredItemsSet = new Set<string>();
@@ -79,7 +91,7 @@ export class TimedStore<T> {
     startClearTask(intervalMs: number = 60000) {
         // stop the existing timer if any
         if (this.#timerHandler >= 0) {
-            this.stopClearTask()    ;
+            this.stopClearTask();
         }
         // start the timer
         this.#timerIntervalMs = intervalMs;

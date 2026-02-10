@@ -46,7 +46,6 @@ Deno.test("data/timed_store", async (t) => {
         store.set(key, val, Date.now() + 1000, onClear);
         store.delete(key);
         // expired
-        time.tick(1100);
         const res = store.get(key);
         assert(res === undefined);
         assert(clearCounter === initClearCounter + 1);
@@ -80,5 +79,25 @@ Deno.test("data/timed_store", async (t) => {
         const res = store.get(key);
         assert(res === undefined);
         assert(clearCounter === initClearCounter + 2);
+    });
+    await t.step("delete_value", () => {
+        const initClearCounter = clearCounter;
+        const nval = { rand: globalThis.crypto.randomUUID() };
+        store.set("k0", nval, Date.now() + 1000, onClear);
+        store.set("k1", val, Date.now() + 1000, onClear);
+        store.set("k2", val, Date.now() + 1000, onClear);
+        store.set("k3", val, Date.now() + 1000, onClear);
+        store.deleteAllValues(val);
+        // k0 as is. k1,k2,k3 expired
+        let res = store.get("k0");
+        assert(res !== undefined);
+        assert(typeof (res as typeof nval)?.rand === "string");
+        res = store.get("k1");
+        assert(res === undefined);
+        res = store.get("k2");
+        assert(res === undefined);
+        res = store.get("k3");
+        assert(res === undefined);
+        assert(clearCounter === initClearCounter + 3);
     });
 });
