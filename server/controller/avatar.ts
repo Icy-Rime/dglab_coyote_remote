@@ -1,5 +1,5 @@
 import { authBySession } from "../data/auth.ts";
-import { hmac512Base64Verify } from "./hmac.ts";
+import { hmac512Base64Verify } from "../utils/hmac.ts";
 
 export interface Avatar {
     authed: boolean;
@@ -88,13 +88,13 @@ export const authFromSecondLifeRequest = async (req: Request) => {
     return undefined;
 };
 
-export const authFromSession = (req: Request) => {
+export const authFromSession = async (req: Request) => {
     const { SL_ADMIN_LIST } = getEnvVars();
     const session = req.headers.get("x-session") ?? "";
     if (session.length === 0) {
         return undefined;
     }
-    const avatarKey = authBySession(session);
+    const avatarKey = await authBySession(session);
     if (avatarKey === undefined) {
         return undefined;
     }
@@ -111,7 +111,7 @@ export const authFromRequest = async (req: Request) => {
     if (avatar !== undefined) {
         return avatar;
     }
-    avatar = authFromSession(req);
+    avatar = await authFromSession(req);
     if (avatar !== undefined) {
         return avatar;
     }

@@ -27,16 +27,16 @@ const randomAuthCode = () => {
     return code;
 };
 
-export const startCodeAuth = (avatarKey: string) => {
+export const startCodeAuth = async (avatarKey: string) => {
     const code = randomAuthCode();
-    codeStore.set(code, avatarKey, Date.now() + CODE_EXPIRE_MS); // 5 min
+    await codeStore.set(code, avatarKey, Date.now() + CODE_EXPIRE_MS); // 5 min
     return code;
 };
 
-export const authByCode = (code: string) => {
-    const avatarKey = codeStore.get(code);
+export const authByCode = async (code: string) => {
+    const avatarKey = await codeStore.get(code);
     if (avatarKey) {
-        codeStore.delete(code);
+        await codeStore.delete(code);
     }
     return avatarKey;
 };
@@ -97,16 +97,16 @@ export const refreshAuthToken = wrapKvOperation(async (avatarKey: string, authId
     return false;
 });
 
-export const createSession = (avatarKey: string) => {
+export const createSession = async (avatarKey: string) => {
     const sessionId = ulid();
-    sessionStore.set(sessionId, avatarKey, Date.now() + SESSION_EXPIRE_MS);
+    await sessionStore.set(sessionId, avatarKey, Date.now() + SESSION_EXPIRE_MS);
     return sessionId;
 };
 
-export const authBySession = (sessionId: string) => {
-    const av = sessionStore.get(sessionId);
+export const authBySession = async (sessionId: string) => {
+    const av = await sessionStore.get(sessionId);
     if (av) {
-        sessionStore.set(sessionId, av, Date.now() + SESSION_EXPIRE_MS); // refresh expire time
+        await sessionStore.set(sessionId, av, Date.now() + SESSION_EXPIRE_MS); // refresh expire time
         return av;
     }
     return undefined;
@@ -114,11 +114,11 @@ export const authBySession = (sessionId: string) => {
 
 export const expireAllAuth = wrapKvOperation(async (avatarKey: string) => {
     // expire all sessions
-    codeStore.deleteAllValues(avatarKey);
-    sessionStore.deleteAllValues(avatarKey);
+    await codeStore.deleteAllValues(avatarKey);
+    await sessionStore.deleteAllValues(avatarKey);
     // expire all tokens
     const kv = getKv();
-    for await (const item of kv.list({prefix: [D_AUTH_PREFIX, D_BY_AVATAR, avatarKey]})) {
+    for await (const item of kv.list({ prefix: [D_AUTH_PREFIX, D_BY_AVATAR, avatarKey] })) {
         const authId = item.key[3] as string | undefined;
         if (!authId) {
             continue;

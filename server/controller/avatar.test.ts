@@ -1,6 +1,6 @@
 import { assert, assertEquals } from "@std/assert";
-import { hmac512Base64Sign } from "./hmac.ts";
-import { authFromRequest, authFromSecondLifeRequest, authFromSession } from "./avatar.ts";
+import { hmac512Base64Sign } from "../utils/hmac.ts";
+import { authFromRequest, authFromSecondLifeRequest, authFromSession } from "../controller/avatar.ts";
 import { closeKv, initKv } from "../data/kv.ts";
 import { createSession } from "../data/auth.ts";
 
@@ -45,9 +45,9 @@ Deno.test("avatarTest", async (t) => {
         assertEquals(avatar.fromSL, true);
         assertEquals(avatar.isAdmin, true);
     });
-    await t.step("authFromSessionTest", () => {
+    await t.step("authFromSessionTest", async () => {
         const avatarKey = "f09f9a28-e1a3-4422-ae62-78dd110c4b00";
-        const session = createSession(avatarKey);
+        const session = await createSession(avatarKey);
         // build request
         const req = new Request("https://127.0.0.1/auth?abc=321", {
             headers: {
@@ -55,14 +55,14 @@ Deno.test("avatarTest", async (t) => {
             },
         });
         // request
-        const avatar = authFromSession(req);
+        const avatar = await authFromSession(req);
         assert(avatar); // not undefined.
         assertEquals(avatar.authed, true);
         assertEquals(avatar.avatarKey, avatarKey);
         assertEquals(avatar.fromSL, false);
         assertEquals(avatar.isAdmin, false);
     });
-    await t.step("authFromSessionFailedTest", () => {
+    await t.step("authFromSessionFailedTest", async () => {
         // build request
         const req = new Request("https://127.0.0.1/auth?abc=321", {
             headers: {
@@ -70,14 +70,14 @@ Deno.test("avatarTest", async (t) => {
             },
         });
         // request
-        const avatar = authFromSession(req);
+        const avatar = await authFromSession(req);
         assert(avatar === undefined);
     });
     await t.step("authFromRequest1Test", async () => {
         // build a request
         const avatarKey = "f09f9a28-e1a3-4422-ae62-78dd110c4b86";
         const avatarKey2 = "f09f9a28-e1a3-4422-ae62-78dd110c4b00";
-        const session = createSession(avatarKey2);
+        const session = await createSession(avatarKey2);
         const avatarName = "Test User";
         const signRand = "randomstring" + Math.random().toFixed(4);
         const url = new URL("https://127.0.0.1/auth?abc=321");
@@ -112,7 +112,7 @@ Deno.test("avatarTest", async (t) => {
         // build a request
         const avatarKey = "f09f9a28-e1a3-4422-ae62-78dd110c4b86";
         const avatarKey2 = "f09f9a28-e1a3-4422-ae62-78dd110c4b00";
-        const session = createSession(avatarKey2);
+        const session = await createSession(avatarKey2);
         const avatarName = "Test User";
         const signRand = "randomstring" + Math.random().toFixed(4);
         const url = new URL("https://127.0.0.1/auth?abc=321");

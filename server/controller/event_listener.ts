@@ -65,9 +65,10 @@ class EventListener {
 
 const listeners: Map<string, EventListener> = new Map();
 
-const unregisterListener = (uid: string) => {
-    if (listeners.has(uid)) {
-        listeners.delete(uid);
+const unregisterListenerByObject = (lst: EventListener) => {
+    const savedListener = listeners.get(lst.getId());
+    if (savedListener === lst) {
+        listeners.delete(savedListener.getId());
     }
 };
 
@@ -79,7 +80,7 @@ export const startListen = (uid: string): Response | undefined => {
     const lst = new EventListener(uid);
     listeners.set(uid, lst);
     return lst.makeResponse(() => {
-        unregisterListener(uid);
+        unregisterListenerByObject(lst);
     });
 };
 
@@ -110,5 +111,6 @@ export const startKeepliveTask = () => {
             }
         }
     };
-    setInterval(task, 14 * 1000);
+    // 保存interval ID以便在测试结束时清理
+    return setInterval(task, 25 * 1000);
 };

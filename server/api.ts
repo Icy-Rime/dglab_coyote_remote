@@ -1,7 +1,6 @@
-import { emitEvent, pingListener, startKeepliveTask, startListen } from "./listeners.ts";
+import { emitEvent, pingListener, startKeepliveTask, startListen } from "./controller/event_listener.ts";
 import { serveDir } from "@std/http";
-import { authBySession } from "./data/auth.ts";
-import { authFromSecondLifeRequest } from "./utils/avatar.ts";
+import { authFromSecondLifeRequest } from "./controller/avatar.ts";
 
 const FIELD_CONTENT_MAX_LENGTH = 16384;
 const STATIC_DIR = "dist";
