@@ -1,4 +1,5 @@
-/** the store that expires its items after a certain time. */
+import { PromiseLock } from "../utils/lock.ts";
+
 export type OnExpireCallbackType = (
     force_delete: boolean,
 ) => number | undefined | null | void | Promise<number | undefined | null | void>;
@@ -13,18 +14,19 @@ interface StoreItem {
     onExpire?: OnExpireCallbackType;
 }
 
+/** the store that expires its items after a certain time. */
 export class TimedStore<T> {
     #store: Map<string, StoreItem> = new Map();
     #timerHandler: number = -1;
-    #timerIntervalMs: number = 0;
-    #asyncTasks: Set<Promise<unknown>> = new Set();
+    #scheduleTask: Promise<void> | undefined = undefined;
+    #nextKeyToClear: string = "";
+    #lock = new PromiseLock();
 
     constructor() {
-        this.checkAndClearExpiredItems = this.checkAndClearExpiredItems.bind(this);
-        this.__clearTaskAction = this.__clearTaskAction.bind(this);
+        this.__triggerClearTask = this.__triggerClearTask.bind(this);
     }
 
-    async set(key: string, value: T, expireAt: number, onClear?: OnExpireCallbackType) {
+    set = this.#lock.wrap(async (key: string, value: T, expireAt: number, onClear?: OnExpireCallbackType) => {
         if (this.#store.has(key)) {
             const item = this.#store.get(key)!;
             await item.onExpire?.(true);
@@ -34,43 +36,48 @@ export class TimedStore<T> {
             expires: expireAt,
             onExpire: onClear,
         });
-    }
+        await this.#restartClearTask();
+    });
 
-    async get(key: string, defaultValue?: T): Promise<T | undefined> {
+    get = this.#lock.wrap(async (key: string, defaultValue?: T): Promise<T | undefined> => {
         const item = this.#store.get(key);
         const now = Date.now();
         if (item) {
             if (item.expires >= now) {
                 return item.value as T;
             }
-            // expire callback
+            // expire callback, can query new expire time
             const newExpire = await item.onExpire?.(false) ?? false;
             if (typeof newExpire === "number" && newExpire > now) {
                 // update expire time
                 item.expires = newExpire;
+                await this.#restartClearTask();
                 return item.value as T;
             } else {
                 this.#store.delete(key);
+                await this.#restartClearTask();
             }
         }
-        return defaultValue;
-    }
+        return defaultValue as T | undefined;
+    });
 
-    async delete(key: string) {
+    delete = this.#lock.wrap(async (key: string) => {
         const item = this.#store.get(key);
         if (item) {
             await item.onExpire?.(true);
             this.#store.delete(key);
+            await this.#restartClearTask();
         }
-    }
+    });
 
-    async clear() {
+    clear = this.#lock.wrap(async () => {
         const tasks = this.#store.values().map((item) => item.onExpire?.(true));
         this.#store.clear();
         await Promise.allSettled(tasks);
-    }
+        await this.#restartClearTask();
+    });
 
-    async deleteAllValues(value: T) {
+    deleteAllValues = this.#lock.wrap(async (value: T) => {
         const keyToDelete = new Set<string>();
         for (const [key, item] of this.#store) {
             if (item.value === value) {
@@ -78,79 +85,114 @@ export class TimedStore<T> {
             }
         }
         for (const key of keyToDelete) {
-            await this.delete(key);
-        }
-    }
-
-    #counter: number = 0;
-    async checkAndClearExpiredItems() {
-        const now = Date.now();
-        // const id = this.#counter++;
-        // console.log(`checkAndClearExpiredItems ${id}, ${now}, ${this.#store.size} items`);
-        const expiredItemsSet = new Set<string>();
-        for (const [key, item] of this.#store) {
-            // console.log(`${item.expires}`);
-            if (item.expires < now) {
-                expiredItemsSet.add(key);
-                // console.log(`clear ${id} add ${key}`);
-            }
-        }
-        const tasks = Array.from(expiredItemsSet).map(async (key) => {
-            const item = this.#store.get(key)!;
-            // expire callback
-            const newExpire = await item.onExpire?.(false) ?? false;
-            if (typeof newExpire === "number" && newExpire > now) {
-                // update expire time
-                item.expires = newExpire;
-            } else {
+            // await this.delete(key); // lock didn't support recursive call
+            const item = this.#store.get(key);
+            if (item) {
+                await item.onExpire?.(true);
                 this.#store.delete(key);
             }
-            // console.log(`clear ${id} done ${key}`);
-        });
-        await Promise.allSettled(tasks);
-        // console.log(`checkAndClearExpiredItems ${id} done`);
+        }
+        if (keyToDelete.size > 0) {
+            await this.#restartClearTask();
+        }
+    });
+
+    // #counter = 0;
+    #startClearTask() {
+        let nearestExpireTimeMs = Number.MAX_SAFE_INTEGER;
+        let nearestExpireKey: string | undefined = undefined;
+        for (const [key, item] of this.#store) {
+            if (item.expires < nearestExpireTimeMs) {
+                // find the nearest expire item
+                nearestExpireTimeMs = item.expires;
+                nearestExpireKey = key;
+            }
+        }
+        // cancel previous timer
+        this.#scheduleTask = undefined;
+        if (this.#timerHandler >= 0) {
+            clearTimeout(this.#timerHandler);
+            this.#timerHandler = -1;
+        }
+        if (typeof nearestExpireKey === "string") {
+            this.#nextKeyToClear = nearestExpireKey;
+            const delayMs = Math.max(0, nearestExpireTimeMs - Date.now() + 1);
+            this.#timerHandler = setTimeout(this.__triggerClearTask, delayMs);
+            // const cid = ++this.#counter;
+            // console.log(`schedule clear task ${cid} in ${delayMs}ms`);
+        }
     }
 
-    __clearTaskAction() {
-        const now1 = Date.now();
-        // console.log(`__clearTaskAction ${this.#counter}, ${now1}`);
-        const task = this.checkAndClearExpiredItems()
-            .catch(console.error)
-            .then(async () => {
-                if (this.#timerIntervalMs > 0) {
-                    const now2 = Date.now();
-                    if (now2 - now1 > this.#timerIntervalMs) {
-                        await this.checkAndClearExpiredItems(); // execute next clear task immediately
+    /** warn: this method should be called in a locked context */
+    async #restartClearTask() {
+        if (!this.#lock.isLocked()) {
+            throw new Error("#restartClearTask should be called in a locked context");
+        }
+        this.#lock.unlock(); // unlock, let clear task run
+        try {
+            await this.stopClearTask();
+        } finally {
+            await this.#lock.lock(); // lock again
+        }
+        if (this.#store.size > 0 && this.#timerHandler < 0 && this.#scheduleTask === undefined) {
+            this.#startClearTask();
+        }
+    }
+
+    __triggerClearTask() {
+        if (this.#scheduleTask) {
+            return;
+        }
+        const keyToClear = this.#nextKeyToClear;
+        // const cid = ++this.#counter;
+        // console.log(`start clear task ${cid}`);
+        const task = this.#lock.do(async () => {
+            // console.log(`execute clear task ${cid}`);
+            try {
+                const now = Date.now();
+                const item = this.#store.get(keyToClear);
+                if (item && item.expires <= now) {
+                    const result = await item.onExpire?.(true);
+                    if (typeof result === "number") {
+                        // update expire time
+                        item.expires = result;
+                    } else {
+                        // delete item
+                        this.#store.delete(keyToClear);
                     }
-                    this.#timerHandler = setTimeout(this.__clearTaskAction, this.#timerIntervalMs);
                 }
-            })
-            .then(() => {
-                this.#asyncTasks.delete(task);
-            });
-        this.#asyncTasks.add(task);
+            } catch (e) {
+                console.error(e);
+            }
+            this.#startClearTask();
+        });
+        this.#scheduleTask = task;
+        this.#timerHandler = -1;
     }
 
     async stopClearTask() {
         if (this.#timerHandler >= 0) {
             clearTimeout(this.#timerHandler);
             this.#timerHandler = -1;
-            this.#timerIntervalMs = 0;
         }
-        await Promise.allSettled(this.#asyncTasks);
+        if (this.#scheduleTask) {
+            await this.#scheduleTask;
+            this.#scheduleTask = undefined;
+        }
     }
 
-    async startClearTask(intervalMs: number = 60000) {
-        // stop the existing timer if any
-        if (this.#timerHandler >= 0) {
-            await this.stopClearTask();
-        }
-        // start the timer
-        this.#timerIntervalMs = intervalMs;
-        this.#timerHandler = setTimeout(this.__clearTaskAction, this.#timerIntervalMs);
-    }
+}
 
-    async _waitForClearTask() {
-        await Promise.allSettled(this.#asyncTasks);
+const managedStores = new Set<TimedStore<unknown>>();
+
+export const createManagedTimedStore = <T>(): TimedStore<T> => {
+    const store = new TimedStore<T>();
+    managedStores.add(store as TimedStore<unknown>);
+    return store;
+}
+
+export const stopAllManagedClearTask = async () => {
+    for (const store of managedStores) {
+        await store.stopClearTask();
     }
 }

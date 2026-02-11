@@ -4,6 +4,7 @@ import { closeKv, initKv } from "./kv.ts";
 import { authByCode, expireAllAuth, startCodeAuth } from "./auth.ts";
 import { authByToken, createAuthToken, refreshAuthToken } from "./auth.ts";
 import { authBySession, createSession } from "./auth.ts";
+import { stopAllManagedClearTask } from "./timed_store.ts";
 
 Deno.test("data/auth", async (t) => {
     using time = new FakeTime(); // fake time
@@ -66,5 +67,6 @@ Deno.test("data/auth", async (t) => {
         assert(await authBySession(session) === undefined);
         assert(await authByToken(authInfo.authId, authInfo.token) === undefined);
     });
+    await stopAllManagedClearTask();
     closeKv();
 });

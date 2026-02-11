@@ -57,22 +57,21 @@ Deno.test("data/timed_store", async (t) => {
         assert(res === undefined);
         assert(clearCounter === initClearCounter + 1);
     });
-    await t.step("expire_by_manually_check", async () => {
-        const initClearCounter = clearCounter;
-        await store.set(key, val, Date.now() + 1000, onClear1);
-        await time.tickAsync(200);
-        await store.checkAndClearExpiredItems();
-        assert(clearCounter === initClearCounter);
-        // expired
-        await time.tickAsync(1000);
-        await store.checkAndClearExpiredItems();
-        assert(clearCounter === initClearCounter + 1);
-    });
+    // await t.step("expire_by_manually_check", async () => {
+    //     const initClearCounter = clearCounter;
+    //     await store.set(key, val, Date.now() + 1000, onClear1);
+    //     await time.tickAsync(200);
+    //     await store.checkAndClearExpiredItems();
+    //     assert(clearCounter === initClearCounter);
+    //     // expired
+    //     await time.tickAsync(1000);
+    //     await store.checkAndClearExpiredItems();
+    //     assert(clearCounter === initClearCounter + 1);
+    // });
     await t.step("expire_by_task", async () => {
         await store.clear();
         const initClearCounter = clearCounter;
         await store.set(key, val, Date.now() + 500, onClear1);
-        await store.startClearTask(100);
         await time.tickAsync(201);
         await time.runMicrotasks();
         assert(clearCounter === initClearCounter);
@@ -81,12 +80,12 @@ Deno.test("data/timed_store", async (t) => {
         await time.runMicrotasks();
         assert(clearCounter === initClearCounter + 1);
         // test if task stop
+        await store.set(key, val, Date.now() + 500, onClear1);
         await store.stopClearTask();
+        await time.tickAsync(601);
+        await time.runMicrotasks();
         assert(clearCounter === initClearCounter + 1);
         // clear by get
-        await store.set(key, val, Date.now() + 500, onClear1);
-        await time.tickAsync(501);
-        await time.runMicrotasks();
         const res = await store.get(key);
         assert(res === undefined);
         assert(clearCounter === initClearCounter + 2);
@@ -137,12 +136,11 @@ Deno.test("data/timed_store", async (t) => {
     });
     await t.step("update_expire_by_task", async () => {
         // expire all previous items
-        await store.checkAndClearExpiredItems();
+        await store.clear();
         // init
         const initClearCounter = clearCounter;
         const tmpKey = globalThis.crypto.randomUUID();
         await store.set(tmpKey, val, Date.now() + 1000, onClear2);
-        await store.startClearTask(100);
         // time passed
         await time.tickAsync(1200);
         await time.runMicrotasks();
@@ -164,4 +162,5 @@ Deno.test("data/timed_store", async (t) => {
         // clean up
         await store.delete(tmpKey);
     });
+    await store.stopClearTask();
 });

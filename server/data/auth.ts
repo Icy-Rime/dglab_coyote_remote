@@ -1,5 +1,5 @@
 import { getKv, KVRetry, wrapKvOperation } from "./kv.ts";
-import { TimedStore } from "./timed_store.ts";
+import { createManagedTimedStore } from "./timed_store.ts";
 import { monotonicUlid, ulid } from "@std/ulid";
 
 const D_AUTH_PREFIX = "auth";
@@ -14,10 +14,8 @@ interface AuthTokenInfo {
     expireAt: number;
 }
 
-const codeStore = new TimedStore<string>(); // auth code -> avatar key
-codeStore.startClearTask(60_000);
-const sessionStore = new TimedStore<string>(); // session key -> avatar key
-sessionStore.startClearTask(30 * 60_000);
+const codeStore = createManagedTimedStore<string>(); // auth code -> avatar key
+const sessionStore = createManagedTimedStore<string>(); // session key -> avatar key
 
 const randomAuthCode = () => {
     // generate 16 random hex number
