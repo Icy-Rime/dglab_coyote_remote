@@ -1,4 +1,4 @@
-import { assert } from "@std/assert";
+import { assert, assertThrows } from "@std/assert";
 import { FakeTime } from "@std/testing/time";
 import { TimedStore } from "./timed_store.ts";
 
@@ -26,6 +26,10 @@ Deno.test("data/timed_store", async (t) => {
         assert(res === val);
         assert((res as typeof val).rand === val.rand);
         assert(clearCounter === 0);
+        // the only one key in the store
+        const iter = store.keys();
+        assert(iter.next().value === key);
+        assert(iter.next().done === true);
     });
     await t.step("set_again_delete", async () => {
         const initClearCounter = clearCounter;

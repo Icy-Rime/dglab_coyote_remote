@@ -26,6 +26,10 @@ export class TimedStore<T> {
         this.__triggerClearTask = this.__triggerClearTask.bind(this);
     }
 
+    keys() {
+        return this.#store.keys();
+    }
+
     set = this.#lock.wrap(async (key: string, value: T, expireAt: number, onClear?: OnExpireCallbackType) => {
         if (this.#store.has(key)) {
             const item = this.#store.get(key)!;
