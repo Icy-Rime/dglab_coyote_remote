@@ -3,27 +3,28 @@ import { PromiseLock } from "../utils/lock.ts";
 export type OnExpireCallbackType = (
     force_delete: boolean,
 ) => number | undefined | null | void | Promise<number | undefined | null | void>;
-interface StoreItem {
-    value: unknown;
+interface StoreItem<T> {
+    value: T;
     expires: number;
     /**
      * onClear callback when the item is expired or deleted.
      * @param force_delete whether the item will be deleted forcibly.
-     * @returns new expire time in ms, or undefined to let the item be deleted.
+     * @returns new expire time in ms, or undefined to let the item to be deleted.
      */
     onExpire?: OnExpireCallbackType;
 }
 
 /** the store that expires its items after a certain time. */
 export class TimedStore<T> {
-    #store: Map<string, StoreItem> = new Map();
+    #store: Map<string, StoreItem<T>> = new Map();
     #timerHandler: number = -1;
     #scheduleTask: Promise<void> | undefined = undefined;
     #nextKeyToClear: string = "";
     #lock = new PromiseLock();
+    __triggerClearTask: () => void;
 
     constructor() {
-        this.__triggerClearTask = this.__triggerClearTask.bind(this);
+        this.__triggerClearTask = this.#triggerClearTask.bind(this);
     }
 
     keys() {
@@ -134,7 +135,7 @@ export class TimedStore<T> {
         }
         this.#lock.unlock(); // unlock, let clear task run
         try {
-            await this.stopClearTask();
+            await this.#stopClearTask();
         } finally {
             await this.#lock.lock(); // lock again
         }
@@ -143,7 +144,7 @@ export class TimedStore<T> {
         }
     }
 
-    __triggerClearTask() {
+    #triggerClearTask() {
         if (this.#scheduleTask) {
             return;
         }
@@ -174,7 +175,7 @@ export class TimedStore<T> {
         this.#timerHandler = -1;
     }
 
-    async stopClearTask() {
+    async #stopClearTask() {
         if (this.#timerHandler >= 0) {
             clearTimeout(this.#timerHandler);
             this.#timerHandler = -1;
@@ -185,6 +186,9 @@ export class TimedStore<T> {
         }
     }
 
+    async close() {
+        await this.#stopClearTask();
+    }
 }
 
 const managedStores = new Set<TimedStore<unknown>>();
@@ -193,10 +197,10 @@ export const createManagedTimedStore = <T>(): TimedStore<T> => {
     const store = new TimedStore<T>();
     managedStores.add(store as TimedStore<unknown>);
     return store;
-}
+};
 
-export const stopAllManagedClearTask = async () => {
+export const closeAllManagedTimedStore = async () => {
     for (const store of managedStores) {
-        await store.stopClearTask();
+        await store.close();
     }
-}
+};

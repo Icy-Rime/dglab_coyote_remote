@@ -3,7 +3,7 @@ import { hmac512Base64Sign } from "../utils/hmac.ts";
 import { authFromRequest, authFromSecondLifeRequest, authFromSession } from "../controller/avatar.ts";
 import { closeKv, initKv } from "../data/kv.ts";
 import { createSession } from "../data/auth.ts";
-import { stopAllManagedClearTask } from "../data/timed_store.ts";
+import { closeAllManagedTimedStore } from "../data/timed_store.ts";
 
 const SL_REQUEST_SIGN_KEY = "123456";
 const ALLOW_SL_USER_AGENT_PART = "Second-Life-LSL";
@@ -174,6 +174,6 @@ Deno.test("avatarTest", async (t) => {
         assertEquals(avatar.authed, false);
         assertEquals(avatar.avatarKey, ""); // not undefined.
     });
-    await stopAllManagedClearTask();
+    await closeAllManagedTimedStore();
     closeKv();
 });
