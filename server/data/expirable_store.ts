@@ -1,29 +1,37 @@
 import { PromiseLock } from "../utils/lock.ts";
 
-export type OnExpireCallbackType = (
-    force_delete: boolean,
-) => number | undefined | null | void | Promise<number | undefined | null | void>;
-interface StoreItem<T> {
-    value: T;
-    expires: number;
-    /**
-     * onClear callback when the item is expired or deleted.
-     * @param force_delete whether the item will be deleted forcibly.
-     * @returns new expire time in ms, or undefined to let the item to be deleted.
-     */
-    onExpire?: OnExpireCallbackType;
+export enum ExpireReason {
+    /** the item is expired. */
+    Expired = "EXPIRED",
+    /** the item is deleted. */
+    Deleted = "DELETED",
+    /** the item is overridden by a new item. */
+    Overridden = "OVERRIDDEN",
+    /** the item is not expired. */
+    Unknown = "UNKNOWN",
 }
 
+export interface ExpirableItem {
+    expireAt: number;
+}
+
+export type OnExpireCallbackType<T extends ExpirableItem> = (
+    value: T,
+    reason: ExpireReason,
+) => number | undefined | null | void | Promise<number | undefined | null | void>;
+
 /** the store that expires its items after a certain time. */
-export class TimedStore<T> {
-    #store: Map<string, StoreItem<T>> = new Map();
+export class ExpirableStore<T extends ExpirableItem> {
+    #store: Map<string, T> = new Map();
     #timerHandler: number = -1;
     #scheduleTask: Promise<void> | undefined = undefined;
     #nextKeyToClear: string = "";
     #lock = new PromiseLock();
+    #onExpire: OnExpireCallbackType<T>;
     __triggerClearTask: () => void;
 
-    constructor() {
+    constructor(onExpire: OnExpireCallbackType<T> = (() => undefined)) {
+        this.#onExpire = onExpire;
         this.__triggerClearTask = this.#triggerClearTask.bind(this);
     }
 
@@ -31,33 +39,42 @@ export class TimedStore<T> {
         return this.#store.keys();
     }
 
-    set = this.#lock.wrap(async (key: string, value: T, expireAt: number, onClear?: OnExpireCallbackType) => {
+    set = this.#lock.wrap(async (key: string, value: T) => {
         if (this.#store.has(key)) {
             const item = this.#store.get(key)!;
-            await item.onExpire?.(true);
+            if (item === value) {
+                return;
+            }
+            await this.#onExpire(item, ExpireReason.Overridden);
         }
-        this.#store.set(key, {
-            value,
-            expires: expireAt,
-            onExpire: onClear,
-        });
+        this.#store.set(key, value);
         await this.#restartClearTask();
+    });
+
+    updateExpireTime = this.#lock.wrap(async (key: string, expireAt: number) => {
+        if (this.#store.has(key)) {
+            const item = this.#store.get(key)!;
+            if (item) {
+                item.expireAt = expireAt;
+                await this.#restartClearTask();
+            }
+        }
     });
 
     get = this.#lock.wrap(async (key: string, defaultValue?: T): Promise<T | undefined> => {
         const item = this.#store.get(key);
         const now = Date.now();
         if (item) {
-            if (item.expires >= now) {
-                return item.value as T;
+            if (item.expireAt >= now) {
+                return item;
             }
             // expire callback, can query new expire time
-            const newExpire = await item.onExpire?.(false) ?? false;
-            if (typeof newExpire === "number" && newExpire > now) {
+            const newExpire = (await this.#onExpire(item, ExpireReason.Expired)) ?? false;
+            if (typeof newExpire === "number") {
                 // update expire time
-                item.expires = newExpire;
+                item.expireAt = newExpire;
                 await this.#restartClearTask();
-                return item.value as T;
+                return item;
             } else {
                 this.#store.delete(key);
                 await this.#restartClearTask();
@@ -69,23 +86,23 @@ export class TimedStore<T> {
     delete = this.#lock.wrap(async (key: string) => {
         const item = this.#store.get(key);
         if (item) {
-            await item.onExpire?.(true);
+            await this.#onExpire(item, ExpireReason.Deleted);
             this.#store.delete(key);
             await this.#restartClearTask();
         }
     });
 
     clear = this.#lock.wrap(async () => {
-        const tasks = this.#store.values().map((item) => item.onExpire?.(true));
+        const tasks = this.#store.values().map((item) => this.#onExpire(item, ExpireReason.Deleted));
         this.#store.clear();
         await Promise.allSettled(tasks);
         await this.#restartClearTask();
     });
 
-    deleteAllValues = this.#lock.wrap(async (value: T) => {
+    deleteAll = this.#lock.wrap(async (isEqual: (item: T) => boolean | Promise<boolean>) => {
         const keyToDelete = new Set<string>();
         for (const [key, item] of this.#store) {
-            if (item.value === value) {
+            if (await isEqual(item)) {
                 keyToDelete.add(key);
             }
         }
@@ -93,7 +110,7 @@ export class TimedStore<T> {
             // await this.delete(key); // lock didn't support recursive call
             const item = this.#store.get(key);
             if (item) {
-                await item.onExpire?.(true);
+                await this.#onExpire(item, ExpireReason.Deleted);
                 this.#store.delete(key);
             }
         }
@@ -107,9 +124,9 @@ export class TimedStore<T> {
         let nearestExpireTimeMs = Number.MAX_SAFE_INTEGER;
         let nearestExpireKey: string | undefined = undefined;
         for (const [key, item] of this.#store) {
-            if (item.expires < nearestExpireTimeMs) {
+            if (item.expireAt < nearestExpireTimeMs) {
                 // find the nearest expire item
-                nearestExpireTimeMs = item.expires;
+                nearestExpireTimeMs = item.expireAt;
                 nearestExpireKey = key;
             }
         }
@@ -156,11 +173,11 @@ export class TimedStore<T> {
             try {
                 const now = Date.now();
                 const item = this.#store.get(keyToClear);
-                if (item && item.expires <= now) {
-                    const result = await item.onExpire?.(true);
-                    if (typeof result === "number") {
+                if (item && item.expireAt <= now) {
+                    const newExpire = await this.#onExpire(item, ExpireReason.Expired);
+                    if (typeof newExpire === "number") {
                         // update expire time
-                        item.expires = result;
+                        item.expireAt = newExpire;
                     } else {
                         // delete item
                         this.#store.delete(keyToClear);
@@ -191,15 +208,15 @@ export class TimedStore<T> {
     }
 }
 
-const managedStores = new Set<TimedStore<unknown>>();
+const managedStores = new Set<ExpirableStore<ExpirableItem>>();
 
-export const createManagedTimedStore = <T>(): TimedStore<T> => {
-    const store = new TimedStore<T>();
-    managedStores.add(store as TimedStore<unknown>);
+export const createManagedExpirableStore = <T extends ExpirableItem>(): ExpirableStore<T> => {
+    const store = new ExpirableStore<T>();
+    managedStores.add(store as unknown as ExpirableStore<ExpirableItem>);
     return store;
 };
 
-export const closeAllManagedTimedStore = async () => {
+export const closeAllManagedExpirableStore = async () => {
     for (const store of managedStores) {
         await store.close();
     }

@@ -1,5 +1,6 @@
 import { getKv, KVRetry, wrapKvOperation } from "./kv.ts";
-import { createManagedTimedStore } from "./timed_store.ts";
+import type { ExpirableItem } from "./expirable_store.ts";
+import { createManagedExpirableStore } from "./expirable_store.ts";
 import { monotonicUlid, ulid } from "@std/ulid";
 
 const D_AUTH_PREFIX = "auth";
@@ -14,8 +15,16 @@ interface AuthTokenInfo {
     expireAt: number;
 }
 
-const codeStore = createManagedTimedStore<string>(); // auth code -> avatar key
-const sessionStore = createManagedTimedStore<string>(); // session key -> avatar key
+interface AuthCodeInfo extends ExpirableItem {
+    avatarKey: string;
+}
+
+interface SessionInfo extends ExpirableItem {
+    avatarKey: string;
+}
+
+const codeStore = createManagedExpirableStore<AuthCodeInfo>(); // auth code -> avatar key
+const sessionStore = createManagedExpirableStore<SessionInfo>(); // session key -> avatar key
 
 const randomAuthCode = () => {
     // generate 16 random hex number
@@ -27,12 +36,12 @@ const randomAuthCode = () => {
 
 export const startCodeAuth = async (avatarKey: string) => {
     const code = randomAuthCode();
-    await codeStore.set(code, avatarKey, Date.now() + CODE_EXPIRE_MS); // 5 min
+    await codeStore.set(code, { avatarKey, expireAt: Date.now() + CODE_EXPIRE_MS });
     return code;
 };
 
 export const authByCode = async (code: string) => {
-    const avatarKey = await codeStore.get(code);
+    const avatarKey = (await codeStore.get(code))?.avatarKey;
     if (avatarKey) {
         await codeStore.delete(code);
     }
@@ -97,23 +106,23 @@ export const refreshAuthToken = wrapKvOperation(async (avatarKey: string, authId
 
 export const createSession = async (avatarKey: string) => {
     const sessionId = ulid();
-    await sessionStore.set(sessionId, avatarKey, Date.now() + SESSION_EXPIRE_MS);
+    await sessionStore.set(sessionId, { avatarKey, expireAt: Date.now() + SESSION_EXPIRE_MS });
     return sessionId;
 };
 
 export const authBySession = async (sessionId: string) => {
-    const av = await sessionStore.get(sessionId);
-    if (av) {
-        await sessionStore.set(sessionId, av, Date.now() + SESSION_EXPIRE_MS); // refresh expire time
-        return av;
+    const session = (await sessionStore.get(sessionId));
+    if (session) {
+        await sessionStore.updateExpireTime(sessionId, Date.now() + SESSION_EXPIRE_MS); // refresh expire time
+        return session.avatarKey;
     }
     return undefined;
 };
 
 export const expireAllAuth = wrapKvOperation(async (avatarKey: string) => {
     // expire all sessions
-    await codeStore.deleteAllValues(avatarKey);
-    await sessionStore.deleteAllValues(avatarKey);
+    await codeStore.deleteAll((item) => item.avatarKey === avatarKey);
+    await sessionStore.deleteAll((item) => item.avatarKey === avatarKey);
     // expire all tokens
     const kv = getKv();
     for await (const item of kv.list({ prefix: [D_AUTH_PREFIX, D_BY_AVATAR, avatarKey] })) {

@@ -1,10 +1,11 @@
-import { createManagedTimedStore } from "../data/timed_store.ts";
+import { createManagedExpirableStore } from "../data/expirable_store.ts";
 import { monotonicUlid } from "@std/ulid";
 
 const encoder = new TextEncoder();
-const clientStore = createManagedTimedStore<EventClient>();
+const clientStore = createManagedExpirableStore<EventClient>();
 
 class EventClient {
+    expireAt: number = 0; // expirable
     #id: string = "";
     #stream: ReadableStream | undefined = undefined;
     #controller: ReadableStreamDefaultController | undefined = undefined;
