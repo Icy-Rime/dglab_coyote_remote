@@ -10,7 +10,7 @@ interface TestValue extends ExpirableItem {
     expireReason: ExpireReason;
 }
 
-Deno.test("data/timed_store", async (t) => {
+Deno.test("expirable_store", async (t) => {
     using time = new FakeTime();
     let clearCounter = 0;
     const key = globalThis.crypto.randomUUID();
