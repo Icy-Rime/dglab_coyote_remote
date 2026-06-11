@@ -23,7 +23,7 @@ export type OnExpireCallbackType<T extends ExpirableItem> = (
 /** the store that expires its items after a certain time. */
 export class ExpirableStore<T extends ExpirableItem> {
     #store: Map<string, T> = new Map();
-    #timerHandler: number = -1;
+    #timerHandler: number | undefined = undefined;
     #scheduleTask: Promise<void> | undefined = undefined;
     #nextKeyToClear: string = "";
     #lock = new PromiseLock();
@@ -132,9 +132,9 @@ export class ExpirableStore<T extends ExpirableItem> {
         }
         // cancel previous timer
         this.#scheduleTask = undefined;
-        if (this.#timerHandler >= 0) {
+        if (this.#timerHandler != undefined) {
             clearTimeout(this.#timerHandler);
-            this.#timerHandler = -1;
+            this.#timerHandler = undefined;
         }
         if (typeof nearestExpireKey === "string") {
             this.#nextKeyToClear = nearestExpireKey;
@@ -156,7 +156,7 @@ export class ExpirableStore<T extends ExpirableItem> {
         } finally {
             await this.#lock.lock(); // lock again
         }
-        if (this.#store.size > 0 && this.#timerHandler < 0 && this.#scheduleTask === undefined) {
+        if (this.#store.size > 0 && this.#timerHandler == undefined && this.#scheduleTask === undefined) {
             this.#startClearTask();
         }
     }
@@ -189,13 +189,13 @@ export class ExpirableStore<T extends ExpirableItem> {
             this.#startClearTask();
         });
         this.#scheduleTask = task;
-        this.#timerHandler = -1;
+        this.#timerHandler = undefined;
     }
 
     async #stopClearTask() {
-        if (this.#timerHandler >= 0) {
+        if (this.#timerHandler != undefined) {
             clearTimeout(this.#timerHandler);
-            this.#timerHandler = -1;
+            this.#timerHandler = undefined;
         }
         if (this.#scheduleTask) {
             await this.#scheduleTask;

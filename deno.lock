@@ -1,0 +1,220 @@
+{
+  "version": "5",
+  "specifiers": {
+    "jsr:@oazmi/esbuild-plugin-deno@~0.4.1": "0.4.5",
+    "jsr:@oazmi/esbuild-types@0.27.0": "0.27.0",
+    "jsr:@oazmi/kitchensink@0.9.15": "0.9.15",
+    "jsr:@std/assert@^1.0.15": "1.0.19",
+    "jsr:@std/assert@^1.0.19": "1.0.19",
+    "jsr:@std/async@^1.4.0": "1.4.0",
+    "jsr:@std/cli@^1.0.30": "1.0.30",
+    "jsr:@std/data-structures@^1.1.0": "1.1.0",
+    "jsr:@std/encoding@^1.0.10": "1.0.10",
+    "jsr:@std/fmt@^1.0.10": "1.0.10",
+    "jsr:@std/fs@^1.0.18": "1.0.24",
+    "jsr:@std/fs@^1.0.24": "1.0.24",
+    "jsr:@std/html@^1.0.7": "1.0.7",
+    "jsr:@std/http@^1.0.19": "1.1.1",
+    "jsr:@std/internal@^1.0.12": "1.0.14",
+    "jsr:@std/internal@^1.0.14": "1.0.14",
+    "jsr:@std/media-types@^1.1.0": "1.1.0",
+    "jsr:@std/net@^1.0.6": "1.0.6",
+    "jsr:@std/path@^1.1.0": "1.1.5",
+    "jsr:@std/path@^1.1.5": "1.1.5",
+    "jsr:@std/streams@^1.1.1": "1.1.1",
+    "jsr:@std/testing@^1.0.16": "1.0.19",
+    "jsr:@std/ulid@1": "1.0.0",
+    "npm:@nanostores/persistent@^1.3.4": "1.3.4_nanostores@1.3.0",
+    "npm:@nanostores/preact@^1.1.0": "1.1.0_nanostores@1.3.0_preact@10.29.2",
+    "npm:@types/web-bluetooth@^0.0.21": "0.0.21",
+    "npm:nanostores@^1.3.0": "1.3.0",
+    "npm:preact@^10.29.2": "10.29.2",
+    "npm:workbox-core@^7.4.1": "7.4.1",
+    "npm:workbox-expiration@^7.4.1": "7.4.1",
+    "npm:workbox-routing@^7.4.1": "7.4.1",
+    "npm:workbox-strategies@^7.4.1": "7.4.1",
+    "npm:wouter-preact@^3.10.0": "3.10.0_preact@10.29.2"
+  },
+  "jsr": {
+    "@oazmi/esbuild-plugin-deno@0.4.5": {
+      "integrity": "e3171fdb4194f38fe824a3cf24535942e6a4bb36ac597a721949301faff033bb",
+      "dependencies": [
+        "jsr:@oazmi/esbuild-types",
+        "jsr:@oazmi/kitchensink"
+      ]
+    },
+    "@oazmi/esbuild-types@0.27.0": {
+      "integrity": "322850b450f06acae5b59b74258865e01e4663caf1d2637f3471cd828f0f376d"
+    },
+    "@oazmi/kitchensink@0.9.15": {
+      "integrity": "01fce611fb67dfe100aaf0e98ac3a039c47b84cf01dd299c0b3647bff88c3d86"
+    },
+    "@std/assert@1.0.19": {
+      "integrity": "eaada96ee120cb980bc47e040f82814d786fe8162ecc53c91d8df60b8755991e",
+      "dependencies": [
+        "jsr:@std/internal@^1.0.12"
+      ]
+    },
+    "@std/async@1.4.0": {
+      "integrity": "4d70b008634f571cff9b554090d628c76141c32613aae0ff283fd5fa23d0c379"
+    },
+    "@std/cli@1.0.30": {
+      "integrity": "769446536522d0417d7127ebcabcafac1ab0ce6766d0eb3fca1d36326fe98d13"
+    },
+    "@std/data-structures@1.1.0": {
+      "integrity": "c35ae4ad5d8e41a38573c2fe3e19b18ea2505f63cfea201edcb8720aca1f7f58"
+    },
+    "@std/encoding@1.0.10": {
+      "integrity": "8783c6384a2d13abd5e9e87a7ae0520a30e9f56aeeaa3bdf910a3eaaf5c811a1"
+    },
+    "@std/fmt@1.0.10": {
+      "integrity": "90dfba288802ac6de82fb31d0917eb9e4450b9925b954d5e51fc29ac07419db5"
+    },
+    "@std/fs@1.0.24": {
+      "integrity": "f3061b45b81673a2bece689da041df32d174be064c89eb6397fb5718d3fb7877",
+      "dependencies": [
+        "jsr:@std/internal@^1.0.14",
+        "jsr:@std/path@^1.1.5"
+      ]
+    },
+    "@std/html@1.0.7": {
+      "integrity": "175c818905a6e75743c69c251395e273d82698e58cfe7dd76268d70e28b8d8fe"
+    },
+    "@std/http@1.1.1": {
+      "integrity": "e343a9a80aea07c716b91be5c79df764144430ad2dd7c9121ed7443f08dc74f7",
+      "dependencies": [
+        "jsr:@std/cli",
+        "jsr:@std/encoding",
+        "jsr:@std/fmt",
+        "jsr:@std/fs@^1.0.24",
+        "jsr:@std/html",
+        "jsr:@std/media-types",
+        "jsr:@std/net",
+        "jsr:@std/path@^1.1.5",
+        "jsr:@std/streams"
+      ]
+    },
+    "@std/internal@1.0.14": {
+      "integrity": "291516b3d4c35024d6ffbc0a9df5bf4c64116e05b50012cf846710152d2ffdf7"
+    },
+    "@std/media-types@1.1.0": {
+      "integrity": "c9d093f0c05c3512932b330e3cc1fe1d627b301db33a4c2c2185c02471d6eaa4"
+    },
+    "@std/net@1.0.6": {
+      "integrity": "110735f93e95bb9feb95790a8b1d1bf69ec0dc74f3f97a00a76ea5efea25500c"
+    },
+    "@std/path@1.1.5": {
+      "integrity": "ccea00982ea28c36becaf6e62f855406c76a8c32d462f66f415bbb7d83a271bc",
+      "dependencies": [
+        "jsr:@std/internal@^1.0.14"
+      ]
+    },
+    "@std/streams@1.1.1": {
+      "integrity": "92556d350e537e9dce527a6d08f6f15be3ff65e656079dea69d15252187c7613"
+    },
+    "@std/testing@1.0.19": {
+      "integrity": "f4236172365b216728dc3cc8b5e80a9f4c33083d1e4ede7613d5b25b4014898e",
+      "dependencies": [
+        "jsr:@std/assert@^1.0.19",
+        "jsr:@std/async",
+        "jsr:@std/data-structures",
+        "jsr:@std/fs@^1.0.24",
+        "jsr:@std/internal@^1.0.14",
+        "jsr:@std/path@^1.1.5"
+      ]
+    },
+    "@std/ulid@1.0.0": {
+      "integrity": "d41c3d27a907714413649fee864b7cde8d42ee68437d22b79d5de4f81d808780"
+    }
+  },
+  "npm": {
+    "@nanostores/persistent@1.3.4_nanostores@1.3.0": {
+      "integrity": "sha512-fZ42MOredSkqt450XrPxmQ94pSRPTas/rBUVCvEEMCR+rIp8bdo/xoaFFcG2cwpqAzA164PdD6p3D+MXLJYumw==",
+      "dependencies": [
+        "nanostores"
+      ]
+    },
+    "@nanostores/preact@1.1.0_nanostores@1.3.0_preact@10.29.2": {
+      "integrity": "sha512-oiu9z85AiZlBTKJ8YsfAs8TALpDij70LmmKuRkeF22rS9zUBhVtYDWXEvV1qUUStNNwSFdhTMkwzOYL/IsA+UA==",
+      "dependencies": [
+        "nanostores",
+        "preact"
+      ]
+    },
+    "@types/web-bluetooth@0.0.21": {
+      "integrity": "sha512-oIQLCGWtcFZy2JW77j9k8nHzAOpqMHLQejDA48XXMWH6tjCQHz5RCFz1bzsmROyL6PUm+LLnUiI4BCn221inxA=="
+    },
+    "idb@7.1.1": {
+      "integrity": "sha512-gchesWBzyvGHRO9W8tzUWFDycow5gwjvFKfyV9FF32Y7F50yZMp7mP+T2mJIWFx49zicqyC4uefHM17o6xKIVQ=="
+    },
+    "mitt@3.0.1": {
+      "integrity": "sha512-vKivATfr97l2/QBCYAkXYDbrIWPM2IIKEl7YPhjCvKlG3kE2gm+uBo6nEXK3M5/Ffh/FLpKExzOQ3JJoJGFKBw=="
+    },
+    "nanostores@1.3.0": {
+      "integrity": "sha512-XPUa/jz+P1oJvN9VBxw4L9MtdFfaH3DAryqPssqhb2kXjmb9npz0dly6rCsgFWOPr4Yg9mTfM3MDZgZZ+7A3lA=="
+    },
+    "preact@10.29.2": {
+      "integrity": "sha512-7tNmwg/7mzzAoB/8kSg6Hl37JraAZw3Z3A0JSY7VXlZwo82Xn0G7wKbNNs2qoF4ZEEsQGTwDAroNdqKs1ofJxQ=="
+    },
+    "regexparam@3.0.0": {
+      "integrity": "sha512-RSYAtP31mvYLkAHrOlh25pCNQ5hWnT106VukGaaFfuJrZFkGRX5GhUAdPqpSDXxOhA2c4akmRuplv1mRqnBn6Q=="
+    },
+    "workbox-core@7.4.1": {
+      "integrity": "sha512-DT+vu46eh/2vRsSHTY4Xmc32Z1rr9PRlQUXr1Dx30ZuXRWwOsvZgGgcwxcasubQLQmbTNYZjv44LkBAQ4tT5tQ=="
+    },
+    "workbox-expiration@7.4.1": {
+      "integrity": "sha512-lRKUF7b+OGbeXkQk1s6MHXOa3d7Xxf7Of31W6c6hCfipfIyrtdWZ89stq21AHZMaoG7VNFoHply4Ox+rU31TWg==",
+      "dependencies": [
+        "idb",
+        "workbox-core"
+      ]
+    },
+    "workbox-routing@7.4.1": {
+      "integrity": "sha512-yubJGErZOusuidAenaL5ypfhQOa7urxP/f8E0ws7FPb4039RiWXUWBAyUkmUoOL/BcQGen3h0J8872d51IYxtA==",
+      "dependencies": [
+        "workbox-core"
+      ]
+    },
+    "workbox-strategies@7.4.1": {
+      "integrity": "sha512-GZxpaw9NbmOelj7667uZ2kpk5BFpOGbO4X0qjwh5ls8XQ8C+Lha5LQchTiUzsTFSS+NlUpftYAyOVXvQUrcqOQ==",
+      "dependencies": [
+        "workbox-core"
+      ]
+    },
+    "wouter-preact@3.10.0_preact@10.29.2": {
+      "integrity": "sha512-4a1kd1XX2N1APGOSNXwTNKr0Jgsl1vIdvuyZ+MGlPfZs3uXmDSz70kUfDa8+2O3MXhZNaEa1c6mHzSihdtdpiw==",
+      "dependencies": [
+        "mitt",
+        "preact",
+        "regexparam"
+      ]
+    }
+  },
+  "remote": {
+    "https://deno.land/x/denoflate@1.2.1/mod.ts": "f5628e44b80b3d80ed525afa2ba0f12408e3849db817d47a883b801f9ce69dd6",
+    "https://deno.land/x/denoflate@1.2.1/pkg/denoflate.js": "b9f9ad9457d3f12f28b1fb35c555f57443427f74decb403113d67364e4f2caf4",
+    "https://deno.land/x/denoflate@1.2.1/pkg/denoflate_bg.wasm.js": "d581956245407a2115a3d7e8d85a9641c032940a8e810acbd59ca86afd34d44d",
+    "https://deno.land/x/esbuild@v0.25.5/mod.js": "57b9635116b05e6f214dea72d7f488c13808ee1b8055d96fa5da1c0dffe890cf"
+  },
+  "workspace": {
+    "dependencies": [
+      "jsr:@oazmi/esbuild-plugin-deno@~0.4.1",
+      "jsr:@std/assert@^1.0.15",
+      "jsr:@std/fs@^1.0.18",
+      "jsr:@std/http@^1.0.19",
+      "jsr:@std/path@^1.1.0",
+      "jsr:@std/testing@^1.0.16",
+      "jsr:@std/ulid@1",
+      "npm:@nanostores/persistent@^1.3.4",
+      "npm:@nanostores/preact@^1.1.0",
+      "npm:@types/web-bluetooth@^0.0.21",
+      "npm:nanostores@^1.3.0",
+      "npm:preact@^10.29.2",
+      "npm:workbox-core@^7.4.1",
+      "npm:workbox-expiration@^7.4.1",
+      "npm:workbox-routing@^7.4.1",
+      "npm:workbox-strategies@^7.4.1",
+      "npm:wouter-preact@^3.10.0"
+    ]
+  }
+}
