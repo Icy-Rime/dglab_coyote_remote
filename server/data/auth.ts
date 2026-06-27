@@ -1,7 +1,8 @@
 import { getKv, KVRetry, wrapKvOperation } from "./kv.ts";
 import type { ExpirableItem } from "./expirable_store.ts";
 import { createManagedExpirableStore } from "./expirable_store.ts";
-import { monotonicUlid, ulid } from "@std/ulid";
+import { ulid } from "@std/ulid";
+import { env } from "../utils/env.ts";
 
 const D_AUTH_PREFIX = "auth";
 const D_BY_TOKEN = "avatar_by_token"; // auth id -> avatar key
@@ -49,16 +50,16 @@ export const authByCode = async (code: string) => {
 };
 
 export const createAuthToken = wrapKvOperation(async (avatarKey: string) => {
-    const authId = monotonicUlid();
+    const authId = ulid();
     const token = ulid();
     const kv = getKv();
     const expireAt = Date.now() + AUTH_TOKEN_EXPIRE_MS;
     const result = await kv.atomic()
-        .set([D_AUTH_PREFIX, D_BY_AVATAR, avatarKey, authId], {
+        .set([env.APP_DB_PREFIX, D_AUTH_PREFIX, D_BY_AVATAR, avatarKey, authId], {
             token,
             expireAt,
         } as AuthTokenInfo, { expireIn: AUTH_TOKEN_EXPIRE_MS })
-        .set([D_AUTH_PREFIX, D_BY_TOKEN, authId], avatarKey, { expireIn: AUTH_TOKEN_EXPIRE_MS })
+        .set([env.APP_DB_PREFIX, D_AUTH_PREFIX, D_BY_TOKEN, authId], avatarKey, { expireIn: AUTH_TOKEN_EXPIRE_MS })
         .commit();
     if (!result.ok) {
         throw new KVRetry("create auth token failed");
@@ -71,10 +72,16 @@ export const createAuthToken = wrapKvOperation(async (avatarKey: string) => {
 
 export const authByToken = async (authId: string, token: string) => {
     const kv = getKv();
-    const avatarKeyResult = await kv.get<string>([D_AUTH_PREFIX, D_BY_TOKEN, authId]);
+    const avatarKeyResult = await kv.get<string>([env.APP_DB_PREFIX, D_AUTH_PREFIX, D_BY_TOKEN, authId]);
     if (avatarKeyResult.value) {
         const avatarKey = avatarKeyResult.value;
-        const tokenResult = await kv.get<AuthTokenInfo>([D_AUTH_PREFIX, D_BY_AVATAR, avatarKey, authId]);
+        const tokenResult = await kv.get<AuthTokenInfo>([
+            env.APP_DB_PREFIX,
+            D_AUTH_PREFIX,
+            D_BY_AVATAR,
+            avatarKey,
+            authId,
+        ]);
         if (tokenResult.value?.token === token && tokenResult.value.expireAt >= Date.now()) {
             return avatarKey;
         }
@@ -85,16 +92,16 @@ export const authByToken = async (authId: string, token: string) => {
 export const refreshAuthToken = wrapKvOperation(async (avatarKey: string, authId: string) => {
     const kv = getKv();
     const expireAt = Date.now() + AUTH_TOKEN_EXPIRE_MS;
-    const tokenResult = await kv.get<AuthTokenInfo>([D_AUTH_PREFIX, D_BY_AVATAR, avatarKey, authId]);
+    const tokenResult = await kv.get<AuthTokenInfo>([env.APP_DB_PREFIX, D_AUTH_PREFIX, D_BY_AVATAR, avatarKey, authId]);
     if (tokenResult.value) {
         const token = tokenResult.value.token;
         const kv = getKv();
         const result = await kv.atomic()
-            .set([D_AUTH_PREFIX, D_BY_AVATAR, avatarKey, authId], {
+            .set([env.APP_DB_PREFIX, D_AUTH_PREFIX, D_BY_AVATAR, avatarKey, authId], {
                 token,
                 expireAt,
             } as AuthTokenInfo, { expireIn: AUTH_TOKEN_EXPIRE_MS })
-            .set([D_AUTH_PREFIX, D_BY_TOKEN, authId], avatarKey, { expireIn: AUTH_TOKEN_EXPIRE_MS })
+            .set([env.APP_DB_PREFIX, D_AUTH_PREFIX, D_BY_TOKEN, authId], avatarKey, { expireIn: AUTH_TOKEN_EXPIRE_MS })
             .commit();
         if (!result.ok) {
             throw new KVRetry("refresh auth token failed");
@@ -111,7 +118,7 @@ export const createSession = async (avatarKey: string) => {
 };
 
 export const authBySession = async (sessionId: string) => {
-    const session = (await sessionStore.get(sessionId));
+    const session = await sessionStore.get(sessionId);
     if (session) {
         await sessionStore.updateExpireTime(sessionId, Date.now() + SESSION_EXPIRE_MS); // refresh expire time
         return session.avatarKey;
@@ -125,14 +132,14 @@ export const expireAllAuth = wrapKvOperation(async (avatarKey: string) => {
     await sessionStore.deleteAll((item) => item.avatarKey === avatarKey);
     // expire all tokens
     const kv = getKv();
-    for await (const item of kv.list({ prefix: [D_AUTH_PREFIX, D_BY_AVATAR, avatarKey] })) {
+    for await (const item of kv.list({ prefix: [env.APP_DB_PREFIX, D_AUTH_PREFIX, D_BY_AVATAR, avatarKey] })) {
         const authId = item.key[3] as string | undefined;
         if (!authId) {
             continue;
         }
         const result = await kv.atomic()
             .delete(item.key)
-            .delete([D_AUTH_PREFIX, D_BY_TOKEN, authId])
+            .delete([env.APP_DB_PREFIX, D_AUTH_PREFIX, D_BY_TOKEN, authId])
             .commit();
         if (!result.ok) {
             throw new KVRetry(`expire auth token failed: ${authId}`);

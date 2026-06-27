@@ -1,7 +1,8 @@
 import { assert, AssertionError, assertThrows } from "@std/assert";
-import { KVRetry, getKv, initKv, closeKv, wrapKvOperation } from "./kv.ts";
+import { closeKv, getKv, initKv, KVRetry, wrapKvOperation } from "./kv.ts";
 
 Deno.test("data/kv", async (t) => {
+    // init env
     await t.step("getKvBeforeInit", () => {
         assertThrows(() => {
             getKv();

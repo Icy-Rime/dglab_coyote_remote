@@ -21,6 +21,7 @@
             },
         },
     },
+    "minimumDependencyAge": "P5D",
     "imports": {
         "preact": "npm:preact@^10.29.2",
         "nanostores": "npm:nanostores@^1.3.0",
@@ -41,10 +42,12 @@
         "denoflate": "https://deno.land/x/denoflate@1.2.1/mod.ts",
         "@oazmi/esbuild-plugin-deno": "jsr:@oazmi/esbuild-plugin-deno@^0.4.1",
         "@types/web-bluetooth": "npm:@types/web-bluetooth@^0.0.21",
+        "@types/node": "npm:@types/node@^26.0.1",
         // server deps
         "@std/ulid": "jsr:@std/ulid@^1.0.0",
     },
     "nodeModulesDir": "auto",
+    "jsrDepsInNodeModules": true,
     "compilerOptions": {
         "jsx": "react-jsx",
         "jsxImportSource": "preact",
@@ -52,6 +55,9 @@
         // "jsxFragmentFactory": "Fragment",
         "strict": true,
         "lib": ["dom", "dom.iterable", "esnext", "deno.ns"],
+    },
+    "lint": {
+        "include": ["no-process-global", "no-node-globals"],
     },
     "fmt": {
         "useTabs": false,

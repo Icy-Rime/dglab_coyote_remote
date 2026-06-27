@@ -1,3 +1,4 @@
+/// <reference types="@types/node" />
 import { PromiseLock } from "../utils/lock.ts";
 
 export enum ExpireReason {
@@ -23,7 +24,7 @@ export type OnExpireCallbackType<T extends ExpirableItem> = (
 /** the store that expires its items after a certain time. */
 export class ExpirableStore<T extends ExpirableItem> {
     #store: Map<string, T> = new Map();
-    #timerHandler: number | undefined = undefined;
+    #timerHandler: NodeJS.Timeout | number | undefined = undefined;
     #scheduleTask: Promise<void> | undefined = undefined;
     #nextKeyToClear: string = "";
     #lock = new PromiseLock();

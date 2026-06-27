@@ -1,5 +1,6 @@
 import { authBySession } from "../data/auth.ts";
 import { hmac512Base64Verify } from "../utils/hmac.ts";
+import { env } from "../utils/env.ts";
 
 export interface Avatar {
     authed: boolean;
@@ -17,11 +18,10 @@ export const ANONYMOUS_AVATAR: Avatar = {
 };
 
 const getEnvVars = () => {
-    const SL_REQUEST_SIGN_KEY = Deno.env.get("SL_REQUEST_SIGN_KEY") ?? "key";
-    const ALLOW_SL_USER_AGENT_PART = Deno.env.get("ALLOW_SL_USER_AGENT_PART") ??
-        "(Unknown)";
+    const SL_REQUEST_SIGN_KEY = env.SL_REQUEST_SIGN_KEY;
+    const ALLOW_SL_USER_AGENT_PART = env.ALLOW_SL_USER_AGENT_PART;
     const SL_ADMIN_LIST = new Set(
-        (Deno.env.get("SL_ADMIN_LIST") ?? "")
+        env.SL_ADMIN_LIST
             .split(",").map((item) => item.trim())
             .filter((item) => item.length > 0),
     );

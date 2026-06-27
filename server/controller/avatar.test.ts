@@ -4,26 +4,24 @@ import { authFromRequest, authFromSecondLifeRequest, authFromSession } from "../
 import { closeKv, initKv } from "../data/kv.ts";
 import { createSession } from "../data/auth.ts";
 import { closeAllManagedExpirableStore } from "../data/expirable_store.ts";
-
-const SL_REQUEST_SIGN_KEY = "123456";
-const ALLOW_SL_USER_AGENT_PART = "Second-Life-LSL";
-const SL_ADMIN_LIST = "12345678-1234-1234-1234-123456789012,f09f9a28-e1a3-4422-ae62-78dd110c4b86";
+import { _reload, env } from "../utils/env.ts";
+const ADMIN_USER_UUID = "f09f9a28-e1a3-4422-ae62-78dd110c4b86";
 
 Deno.test("avatarTest", async (t) => {
     // init env
-    Deno.env.set("SL_REQUEST_SIGN_KEY", SL_REQUEST_SIGN_KEY);
-    Deno.env.set("ALLOW_SL_USER_AGENT_PART", ALLOW_SL_USER_AGENT_PART);
-    Deno.env.set("SL_ADMIN_LIST", SL_ADMIN_LIST);
+    Deno.env.set("SL_ADMIN_LIST", `12345678-1234-1234-1234-123456789012,${ADMIN_USER_UUID}`);
+    _reload();
+    //
     await initKv(true);
     await t.step("authFromSecondLifeRequestTest", async () => {
         // build a request
-        const avatarKey = "f09f9a28-e1a3-4422-ae62-78dd110c4b86";
+        const avatarKey = ADMIN_USER_UUID;
         const avatarName = "Test User";
         const signRand = "randomstring" + Math.random().toFixed(4);
         const url = new URL("https://127.0.0.1/auth?abc=321");
         const signTime = new Date().toISOString();
         const sign = await hmac512Base64Sign(
-            avatarKey + SL_REQUEST_SIGN_KEY,
+            avatarKey + env.SL_REQUEST_SIGN_KEY,
             avatarKey + url.pathname + url.search + signTime + signRand,
         );
         const req = new Request(url, {
@@ -34,7 +32,7 @@ Deno.test("avatarTest", async (t) => {
                 "x-secondlife-sign-time": signTime,
                 "x-secondlife-sign": sign,
                 "user-agent": "Second-Life-LSL/2024-10-15.11356152186 (https://secondlife.com) " +
-                    ALLOW_SL_USER_AGENT_PART + "/1.0",
+                    env.ALLOW_SL_USER_AGENT_PART + "/1.0",
             },
         });
         // request
@@ -76,7 +74,7 @@ Deno.test("avatarTest", async (t) => {
     });
     await t.step("authFromRequest1Test", async () => {
         // build a request
-        const avatarKey = "f09f9a28-e1a3-4422-ae62-78dd110c4b86";
+        const avatarKey = ADMIN_USER_UUID;
         const avatarKey2 = "f09f9a28-e1a3-4422-ae62-78dd110c4b00";
         const session = await createSession(avatarKey2);
         const avatarName = "Test User";
@@ -84,7 +82,7 @@ Deno.test("avatarTest", async (t) => {
         const url = new URL("https://127.0.0.1/auth?abc=321");
         const signTime = new Date().toISOString();
         const sign = await hmac512Base64Sign(
-            avatarKey + SL_REQUEST_SIGN_KEY,
+            avatarKey + env.SL_REQUEST_SIGN_KEY,
             avatarKey + url.pathname + url.search + signTime + signRand,
         );
         const req = new Request(url, {
@@ -95,7 +93,7 @@ Deno.test("avatarTest", async (t) => {
                 "x-secondlife-sign-time": signTime,
                 "x-secondlife-sign": sign,
                 "user-agent": "Second-Life-LSL/2024-10-15.11356152186 (https://secondlife.com) " +
-                    ALLOW_SL_USER_AGENT_PART + "/1.0",
+                    env.ALLOW_SL_USER_AGENT_PART + "/1.0",
                 "x-session": session,
             },
         });
@@ -111,7 +109,7 @@ Deno.test("avatarTest", async (t) => {
     });
     await t.step("authFromRequest2Test", async () => {
         // build a request
-        const avatarKey = "f09f9a28-e1a3-4422-ae62-78dd110c4b86";
+        const avatarKey = ADMIN_USER_UUID;
         const avatarKey2 = "f09f9a28-e1a3-4422-ae62-78dd110c4b00";
         const session = await createSession(avatarKey2);
         const avatarName = "Test User";
@@ -119,7 +117,7 @@ Deno.test("avatarTest", async (t) => {
         const url = new URL("https://127.0.0.1/auth?abc=321");
         const signTime = new Date().toISOString();
         const sign = await hmac512Base64Sign(
-            avatarKey + SL_REQUEST_SIGN_KEY,
+            avatarKey + env.SL_REQUEST_SIGN_KEY,
             avatarKey + url.pathname + url.search + signTime + signRand + "badsign",
         );
         const req = new Request(url, {
@@ -130,7 +128,7 @@ Deno.test("avatarTest", async (t) => {
                 "x-secondlife-sign-time": signTime,
                 "x-secondlife-sign": sign,
                 "user-agent": "Second-Life-LSL/2024-10-15.11356152186 (https://secondlife.com) " +
-                    ALLOW_SL_USER_AGENT_PART + "/1.0",
+                    env.ALLOW_SL_USER_AGENT_PART + "/1.0",
                 "x-session": session,
             },
         });
@@ -146,13 +144,13 @@ Deno.test("avatarTest", async (t) => {
     });
     await t.step("authFromRequest3Test", async () => {
         // build a request
-        const avatarKey = "f09f9a28-e1a3-4422-ae62-78dd110c4b86";
+        const avatarKey = ADMIN_USER_UUID;
         const avatarName = "Test User";
         const signRand = "randomstring" + Math.random().toFixed(4);
         const url = new URL("https://127.0.0.1/auth?abc=321");
         const signTime = new Date().toISOString();
         const sign = await hmac512Base64Sign(
-            avatarKey + SL_REQUEST_SIGN_KEY,
+            avatarKey + env.SL_REQUEST_SIGN_KEY,
             avatarKey + url.pathname + url.search + signTime + signRand + "badsign",
         );
         const req = new Request(url, {
@@ -163,7 +161,7 @@ Deno.test("avatarTest", async (t) => {
                 "x-secondlife-sign-time": signTime,
                 "x-secondlife-sign": sign,
                 "user-agent": "Second-Life-LSL/2024-10-15.11356152186 (https://secondlife.com) " +
-                    ALLOW_SL_USER_AGENT_PART + "/1.0",
+                    env.ALLOW_SL_USER_AGENT_PART + "/1.0",
                 "x-session": "bad-sessions",
             },
         });
