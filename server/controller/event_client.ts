@@ -1,27 +1,39 @@
-import { createManagedExpirableStore } from "../data/expirable_store.ts";
-import { monotonicUlid } from "@std/ulid";
+import { createManagedExpirableStore, ExpireReason } from "../data/expirable_store.ts";
+import type { ExpirableItem, OnExpireCallbackType } from "../data/expirable_store.ts";
+import { ulid } from "@std/ulid";
+import { getUser } from "../data/user.ts";
 
 const encoder = new TextEncoder();
-const clientStore = createManagedExpirableStore<EventClient>();
 
-class EventClient {
+class EventClient implements ExpirableItem {
     expireAt: number = 0; // expirable
     #id: string = "";
+    #uid: string = "";
+    #did: string = "";
     #stream: ReadableStream | undefined = undefined;
     #controller: ReadableStreamDefaultController | undefined = undefined;
-    #onClose: (() => void) | (() => Promise<void>) = () => {};
 
-    constructor() {
-        this.#id = monotonicUlid();
+    constructor(uid: string, did: string) {
+        this.#id = ulid();
+        this.#uid = uid;
+        this.#did = did;
         this.close = this.close.bind(this);
-    }
-
-    setOnCloseCallback(onClose: (() => void) | (() => Promise<void>)) {
-        this.#onClose = onClose;
     }
 
     getId() {
         return this.#id;
+    }
+
+    getUserId() {
+        return this.#uid;
+    }
+
+    getDeviceId() {
+        return this.#did;
+    }
+
+    isConnected() {
+        return this.#controller !== undefined;
     }
 
     makeResponse() {
@@ -58,7 +70,6 @@ class EventClient {
             this.#stream = undefined;
             this.#controller?.close();
             this.#controller = undefined;
-            await this.#onClose();
         }
     }
 
@@ -66,25 +77,65 @@ class EventClient {
         if (event) {
             this.#sendRaw(`event: ${event}\r\n`);
         }
-        data.split("\n").forEach((line) => {
+        data.replaceAll("\r\n", "\n").split("\n").forEach((line) => {
             this.#sendRaw(`data: ${line.trimEnd()}\r\n`);
         });
         this.#sendRaw("\r\n");
     }
 }
 
+const queryUserSubscriptionTimeMs = async (userId: string) => {
+    const user = await getUser(userId);
+    if (user === undefined) {
+        throw new Error(`User ${userId} not found.`);
+    }
+    return user.subscriptionTimeMs;
+};
+
+const onExpireCallback: OnExpireCallbackType<EventClient> = async (item: EventClient, reason: ExpireReason) => {
+    if (reason === ExpireReason.Expired) {
+        const userId = item.getUserId();
+        // query current expire time
+        const expireTime = await queryUserSubscriptionTimeMs(userId);
+        if (expireTime - Date.now() > 1000) {
+            return expireTime;
+        }
+    }
+    // other reason / time expire
+    item.close(); // disconnect
+    return undefined;
+};
+
+const clientStore = createManagedExpirableStore<EventClient>(onExpireCallback);
+
+export const _getClientStore = () => {
+    return clientStore;
+};
+
+export const getEventClient = async (userId: string, deviceId: string) => {
+    for (const k of clientStore.keys()) {
+        const item = await clientStore.get(k);
+        if (item?.getUserId() === userId) {
+            if (deviceId === "*" || item.getDeviceId() === deviceId) {
+                return item;
+            }
+        }
+    }
+    return undefined;
+};
+
 export const startKeepliveTask = (intervalMs = 25 * 1000) => {
     const returnHandler = {
         _runningTask: Promise.resolve(),
-        _handle: -1,
+        _handle: undefined as NodeJS.Timeout | number | undefined,
         stop: async () => {
-            if (returnHandler._handle >= 0) {
+            if (returnHandler._handle !== undefined) {
                 clearInterval(returnHandler._handle);
-                returnHandler._handle = -1;
+                returnHandler._handle = undefined;
             }
             await returnHandler._runningTask;
         },
-    }
+    };
     // init task
     const taskPing = async () => {
         const st = Date.now();
@@ -111,4 +162,16 @@ export const startKeepliveTask = (intervalMs = 25 * 1000) => {
     // set interval
     returnHandler._handle = setInterval(task, intervalMs);
     return returnHandler;
+};
+
+export const createEventClient = async (userId: string, deviceId: string) => {
+    let expireTime = await queryUserSubscriptionTimeMs(userId);
+    if ((expireTime - Date.now()) < 10 * 1000) {
+        // not enough time
+        return undefined;
+    }
+    const client = new EventClient(userId, deviceId);
+    client.expireAt = expireTime;
+    clientStore.set(client.getId(), client);
+    return client;
 };

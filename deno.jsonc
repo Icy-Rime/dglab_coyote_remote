@@ -1,26 +1,14 @@
 {
-    // ok with deno 2.8.2
+    // ok with deno 2.9.0
     "tasks": {
         "install_deps": "deno run --allow-write=./node_modules/esbuild_bin --allow-net=registry.npmmirror.com,cdn.npmmirror.com,registry.npmjs.org --allow-env=NPM_CONFIG_REGISTRY scripts/install_esbuild.ts ./node_modules/esbuild_bin/esbuild",
         "docker_build": "deno run --allow-all scripts/build.ts --release",
         "watch": "ESBUILD_BINARY_PATH=./node_modules/esbuild_bin/esbuild deno run --allow-run=./node_modules/esbuild_bin/esbuild --allow-read=. --deny-read=$HOME/.ssh,$HOME/.gitconfig,./env.sh --allow-write=./dist --allow-env=ESBUILD_BINARY_PATH scripts/build.ts --watch",
         "release": "ESBUILD_BINARY_PATH=./node_modules/esbuild_bin/esbuild deno run --allow-run=./node_modules/esbuild_bin/esbuild --allow-read=. --deny-read=$HOME/.ssh,$HOME/.gitconfig,./env.sh --allow-write=./dist --allow-env=ESBUILD_BINARY_PATH scripts/build.ts --release",
-        "serve": "deno serve --watch --allow-read=dist --allow-env=APP_DB_PREFIX,SL_REQUEST_SIGN_KEY,ALLOW_SL_USER_AGENT_PART,SL_ADMIN_LIST server/api.ts",
-        "test": "deno test --ignore=src/pages --allow-env=APP_DB_PREFIX,SL_REQUEST_SIGN_KEY,ALLOW_SL_USER_AGENT_PART,SL_ADMIN_LIST",
+        "serve": "deno serve --watch --allow-read=dist,server --allow-env=APP_DB_PREFIX,SL_REQUEST_SIGN_KEY,ALLOW_SL_USER_AGENT_PART,SL_ADMIN_LIST server/api.ts",
+        "test": "deno test --ignore=src/pages --allow-read=server --allow-env=APP_DB_PREFIX,SL_REQUEST_SIGN_KEY,ALLOW_SL_USER_AGENT_PART,SL_ADMIN_LIST",
     },
     "unstable": ["kv"],
-    "permissions": {
-        "test": {
-            "env": {
-                "allow": [
-                    "APP_DB_PREFIX",
-                    "SL_REQUEST_SIGN_KEY",
-                    "ALLOW_SL_USER_AGENT_PART",
-                    "SL_ADMIN_LIST",
-                ],
-            },
-        },
-    },
     "minimumDependencyAge": "P5D",
     "imports": {
         "preact": "npm:preact@^10.29.2",
@@ -41,8 +29,8 @@
         "esbuild": "https://deno.land/x/esbuild@v0.25.5/mod.js",
         "denoflate": "https://deno.land/x/denoflate@1.2.1/mod.ts",
         "@oazmi/esbuild-plugin-deno": "jsr:@oazmi/esbuild-plugin-deno@^0.4.1",
-        "@types/web-bluetooth": "npm:@types/web-bluetooth@^0.0.21",
-        "@types/node": "npm:@types/node@^26.0.1",
+        "npm:@types/web-bluetooth": "npm:@types/web-bluetooth@^0.0.21",
+        "npm:@types/node": "npm:@types/node@^26.0.1",
         // server deps
         "@std/ulid": "jsr:@std/ulid@^1.0.0",
     },

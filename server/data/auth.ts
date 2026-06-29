@@ -55,6 +55,8 @@ export const createAuthToken = wrapKvOperation(async (avatarKey: string) => {
     const kv = getKv();
     const expireAt = Date.now() + AUTH_TOKEN_EXPIRE_MS;
     const result = await kv.atomic()
+        .check({ key: [env.APP_DB_PREFIX, D_AUTH_PREFIX, D_BY_AVATAR, avatarKey, authId], versionstamp: null })
+        .check({ key: [env.APP_DB_PREFIX, D_AUTH_PREFIX, D_BY_TOKEN, authId], versionstamp: null })
         .set([env.APP_DB_PREFIX, D_AUTH_PREFIX, D_BY_AVATAR, avatarKey, authId], {
             token,
             expireAt,
@@ -89,16 +91,29 @@ export const authByToken = async (authId: string, token: string) => {
     return undefined;
 };
 
-export const refreshAuthToken = wrapKvOperation(async (avatarKey: string, authId: string) => {
+export const refreshAuthToken = wrapKvOperation(async (authId: string, token: string) => {
     const kv = getKv();
     const expireAt = Date.now() + AUTH_TOKEN_EXPIRE_MS;
-    const tokenResult = await kv.get<AuthTokenInfo>([env.APP_DB_PREFIX, D_AUTH_PREFIX, D_BY_AVATAR, avatarKey, authId]);
-    if (tokenResult.value) {
-        const token = tokenResult.value.token;
-        const kv = getKv();
+    const avatarKeyResult = await kv.get<string>([env.APP_DB_PREFIX, D_AUTH_PREFIX, D_BY_TOKEN, authId]);
+    if (avatarKeyResult.value) {
+        const avatarKey = avatarKeyResult.value;
+        const tokenResult = await kv.get<AuthTokenInfo>([
+            env.APP_DB_PREFIX,
+            D_AUTH_PREFIX,
+            D_BY_AVATAR,
+            avatarKey,
+            authId,
+        ]);
+        const oldToken = tokenResult.value?.token;
+        if (tokenResult.value?.token !== token || tokenResult.value.expireAt < Date.now()) {
+            return "";
+        }
+        const newToken = ulid();
         const result = await kv.atomic()
+            .check(avatarKeyResult)
+            .check(tokenResult)
             .set([env.APP_DB_PREFIX, D_AUTH_PREFIX, D_BY_AVATAR, avatarKey, authId], {
-                token,
+                token: newToken,
                 expireAt,
             } as AuthTokenInfo, { expireIn: AUTH_TOKEN_EXPIRE_MS })
             .set([env.APP_DB_PREFIX, D_AUTH_PREFIX, D_BY_TOKEN, authId], avatarKey, { expireIn: AUTH_TOKEN_EXPIRE_MS })
@@ -106,9 +121,30 @@ export const refreshAuthToken = wrapKvOperation(async (avatarKey: string, authId
         if (!result.ok) {
             throw new KVRetry("refresh auth token failed");
         }
-        return true;
+        return newToken;
     }
-    return false;
+    return "";
+    // const tokenResult = await kv.get<AuthTokenInfo>([env.APP_DB_PREFIX, D_AUTH_PREFIX, D_BY_AVATAR, avatarKey, authId]);
+    // if (tokenResult.value) {
+    //     const oldToken = tokenResult.value.token;
+    //     if (token !== oldToken) {
+    //         return "";
+    //     }
+    //     const newToken = ulid();
+    //     const kv = getKv();
+    //     const result = await kv.atomic()
+    //         .set([env.APP_DB_PREFIX, D_AUTH_PREFIX, D_BY_AVATAR, avatarKey, authId], {
+    //             token: newToken,
+    //             expireAt,
+    //         } as AuthTokenInfo, { expireIn: AUTH_TOKEN_EXPIRE_MS })
+    //         .set([env.APP_DB_PREFIX, D_AUTH_PREFIX, D_BY_TOKEN, authId], avatarKey, { expireIn: AUTH_TOKEN_EXPIRE_MS })
+    //         .commit();
+    //     if (!result.ok) {
+    //         throw new KVRetry("refresh auth token failed");
+    //     }
+    //     return newToken;
+    // }
+    // return "";
 });
 
 export const createSession = async (avatarKey: string) => {
@@ -137,7 +173,10 @@ export const expireAllAuth = wrapKvOperation(async (avatarKey: string) => {
         if (!authId) {
             continue;
         }
+        const authTokenResult = await kv.get([env.APP_DB_PREFIX, D_AUTH_PREFIX, D_BY_TOKEN, authId]);
         const result = await kv.atomic()
+            .check(item)
+            .check(authTokenResult)
             .delete(item.key)
             .delete([env.APP_DB_PREFIX, D_AUTH_PREFIX, D_BY_TOKEN, authId])
             .commit();

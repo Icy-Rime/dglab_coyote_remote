@@ -33,6 +33,7 @@
     "npm:@jsr/std__ulid@1": "1.0.0",
     "npm:@nanostores/persistent@^1.3.4": "1.3.4_nanostores@1.3.0",
     "npm:@nanostores/preact@^1.1.0": "1.1.0_nanostores@1.3.0_preact@10.29.2",
+    "npm:@types/node@*": "26.0.1",
     "npm:@types/node@^26.0.1": "26.0.1",
     "npm:@types/web-bluetooth@^0.0.21": "0.0.21",
     "npm:nanostores@^1.3.0": "1.3.0",
@@ -266,77 +267,63 @@
       "integrity": "sha512-fZ42MOredSkqt450XrPxmQ94pSRPTas/rBUVCvEEMCR+rIp8bdo/xoaFFcG2cwpqAzA164PdD6p3D+MXLJYumw==",
       "dependencies": [
         "nanostores"
-      ],
-      "tarball": "https://registry.npmmirror.com/@nanostores/persistent/-/persistent-1.3.4.tgz"
+      ]
     },
     "@nanostores/preact@1.1.0_nanostores@1.3.0_preact@10.29.2": {
       "integrity": "sha512-oiu9z85AiZlBTKJ8YsfAs8TALpDij70LmmKuRkeF22rS9zUBhVtYDWXEvV1qUUStNNwSFdhTMkwzOYL/IsA+UA==",
       "dependencies": [
         "nanostores",
         "preact"
-      ],
-      "tarball": "https://registry.npmmirror.com/@nanostores/preact/-/preact-1.1.0.tgz"
+      ]
     },
     "@types/node@26.0.1": {
       "integrity": "sha512-fc3KiUoBt6kie0N9bIW3E47vZsuaMf0PM2AaUpLCLT0s/LvX1nxAim6Fc049cNxODPpGm6qRAuUOB86SkRuPQw==",
       "dependencies": [
         "undici-types"
-      ],
-      "tarball": "https://registry.npmmirror.com/@types/node/-/node-26.0.1.tgz"
+      ]
     },
     "@types/web-bluetooth@0.0.21": {
-      "integrity": "sha512-oIQLCGWtcFZy2JW77j9k8nHzAOpqMHLQejDA48XXMWH6tjCQHz5RCFz1bzsmROyL6PUm+LLnUiI4BCn221inxA==",
-      "tarball": "https://registry.npmmirror.com/@types/web-bluetooth/-/web-bluetooth-0.0.21.tgz"
+      "integrity": "sha512-oIQLCGWtcFZy2JW77j9k8nHzAOpqMHLQejDA48XXMWH6tjCQHz5RCFz1bzsmROyL6PUm+LLnUiI4BCn221inxA=="
     },
     "idb@7.1.1": {
-      "integrity": "sha512-gchesWBzyvGHRO9W8tzUWFDycow5gwjvFKfyV9FF32Y7F50yZMp7mP+T2mJIWFx49zicqyC4uefHM17o6xKIVQ==",
-      "tarball": "https://registry.npmmirror.com/idb/-/idb-7.1.1.tgz"
+      "integrity": "sha512-gchesWBzyvGHRO9W8tzUWFDycow5gwjvFKfyV9FF32Y7F50yZMp7mP+T2mJIWFx49zicqyC4uefHM17o6xKIVQ=="
     },
     "mitt@3.0.1": {
-      "integrity": "sha512-vKivATfr97l2/QBCYAkXYDbrIWPM2IIKEl7YPhjCvKlG3kE2gm+uBo6nEXK3M5/Ffh/FLpKExzOQ3JJoJGFKBw==",
-      "tarball": "https://registry.npmmirror.com/mitt/-/mitt-3.0.1.tgz"
+      "integrity": "sha512-vKivATfr97l2/QBCYAkXYDbrIWPM2IIKEl7YPhjCvKlG3kE2gm+uBo6nEXK3M5/Ffh/FLpKExzOQ3JJoJGFKBw=="
     },
     "nanostores@1.3.0": {
-      "integrity": "sha512-XPUa/jz+P1oJvN9VBxw4L9MtdFfaH3DAryqPssqhb2kXjmb9npz0dly6rCsgFWOPr4Yg9mTfM3MDZgZZ+7A3lA==",
-      "tarball": "https://registry.npmmirror.com/nanostores/-/nanostores-1.3.0.tgz"
+      "integrity": "sha512-XPUa/jz+P1oJvN9VBxw4L9MtdFfaH3DAryqPssqhb2kXjmb9npz0dly6rCsgFWOPr4Yg9mTfM3MDZgZZ+7A3lA=="
     },
     "preact@10.29.2": {
-      "integrity": "sha512-7tNmwg/7mzzAoB/8kSg6Hl37JraAZw3Z3A0JSY7VXlZwo82Xn0G7wKbNNs2qoF4ZEEsQGTwDAroNdqKs1ofJxQ==",
-      "tarball": "https://registry.npmmirror.com/preact/-/preact-10.29.2.tgz"
+      "integrity": "sha512-7tNmwg/7mzzAoB/8kSg6Hl37JraAZw3Z3A0JSY7VXlZwo82Xn0G7wKbNNs2qoF4ZEEsQGTwDAroNdqKs1ofJxQ=="
     },
     "regexparam@3.0.0": {
-      "integrity": "sha512-RSYAtP31mvYLkAHrOlh25pCNQ5hWnT106VukGaaFfuJrZFkGRX5GhUAdPqpSDXxOhA2c4akmRuplv1mRqnBn6Q==",
-      "tarball": "https://registry.npmmirror.com/regexparam/-/regexparam-3.0.0.tgz"
+      "integrity": "sha512-RSYAtP31mvYLkAHrOlh25pCNQ5hWnT106VukGaaFfuJrZFkGRX5GhUAdPqpSDXxOhA2c4akmRuplv1mRqnBn6Q=="
     },
     "undici-types@8.3.0": {
-      "integrity": "sha512-j375ScV60dom+YkPFIfTLcOiPxkN/buHz5GobjLhixFuANaNs3C9l4GmrWqejgXWJ7BbJcFYpTEUkS1Ge8bpZQ==",
-      "tarball": "https://registry.npmmirror.com/undici-types/-/undici-types-8.3.0.tgz"
+      "integrity": "sha512-j375ScV60dom+YkPFIfTLcOiPxkN/buHz5GobjLhixFuANaNs3C9l4GmrWqejgXWJ7BbJcFYpTEUkS1Ge8bpZQ=="
     },
     "workbox-core@7.4.1": {
-      "integrity": "sha512-DT+vu46eh/2vRsSHTY4Xmc32Z1rr9PRlQUXr1Dx30ZuXRWwOsvZgGgcwxcasubQLQmbTNYZjv44LkBAQ4tT5tQ==",
-      "tarball": "https://registry.npmmirror.com/workbox-core/-/workbox-core-7.4.1.tgz"
+      "integrity": "sha512-DT+vu46eh/2vRsSHTY4Xmc32Z1rr9PRlQUXr1Dx30ZuXRWwOsvZgGgcwxcasubQLQmbTNYZjv44LkBAQ4tT5tQ=="
     },
     "workbox-expiration@7.4.1": {
       "integrity": "sha512-lRKUF7b+OGbeXkQk1s6MHXOa3d7Xxf7Of31W6c6hCfipfIyrtdWZ89stq21AHZMaoG7VNFoHply4Ox+rU31TWg==",
       "dependencies": [
         "idb",
         "workbox-core"
-      ],
-      "tarball": "https://registry.npmmirror.com/workbox-expiration/-/workbox-expiration-7.4.1.tgz"
+      ]
     },
     "workbox-routing@7.4.1": {
       "integrity": "sha512-yubJGErZOusuidAenaL5ypfhQOa7urxP/f8E0ws7FPb4039RiWXUWBAyUkmUoOL/BcQGen3h0J8872d51IYxtA==",
       "dependencies": [
         "workbox-core"
-      ],
-      "tarball": "https://registry.npmmirror.com/workbox-routing/-/workbox-routing-7.4.1.tgz"
+      ]
     },
     "workbox-strategies@7.4.1": {
       "integrity": "sha512-GZxpaw9NbmOelj7667uZ2kpk5BFpOGbO4X0qjwh5ls8XQ8C+Lha5LQchTiUzsTFSS+NlUpftYAyOVXvQUrcqOQ==",
       "dependencies": [
         "workbox-core"
-      ],
-      "tarball": "https://registry.npmmirror.com/workbox-strategies/-/workbox-strategies-7.4.1.tgz"
+      ]
     },
     "wouter-preact@3.10.0_preact@10.29.2": {
       "integrity": "sha512-4a1kd1XX2N1APGOSNXwTNKr0Jgsl1vIdvuyZ+MGlPfZs3uXmDSz70kUfDa8+2O3MXhZNaEa1c6mHzSihdtdpiw==",
@@ -344,8 +331,7 @@
         "mitt",
         "preact",
         "regexparam"
-      ],
-      "tarball": "https://registry.npmmirror.com/wouter-preact/-/wouter-preact-3.10.0.tgz"
+      ]
     }
   },
   "remote": {

@@ -34,7 +34,10 @@ Deno.test("data/auth", async (t) => {
         assert(await authByToken(authInfo.authId, authInfo.token) === avatarKey);
         // test refresh
         time.tick(5 * 24 * 3600_000);
-        assert(await refreshAuthToken(avatarKey, authInfo.authId));
+        const oldToken = authInfo.token;
+        authInfo.token = await refreshAuthToken(authInfo.authId, authInfo.token);
+        assert(authInfo.token);
+        assert(authInfo.token !== oldToken);
         time.tick(5 * 24 * 3600_000);
         assert(await authByToken(authInfo.authId, authInfo.token) === avatarKey);
         // test expire

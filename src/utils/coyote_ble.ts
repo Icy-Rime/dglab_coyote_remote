@@ -1,3 +1,4 @@
+/// <reference types="npm:@types/web-bluetooth"/>
 const NAME_PREFIXS = ["D-LAB", "47"]; // 扫描前缀
 const PRIMARY_SERVICES = [
     "955a180b-0fe2-f5aa-a094-84b8d4f3e8ad",
@@ -79,7 +80,7 @@ export class CoyoteBLE extends EventTarget {
     #dev: BluetoothDevice | null = null;
     #srv: BluetoothRemoteGATTServer | null = null;
     #notiFallbackMode: boolean = false;
-    #pollTimerId: number = -1;
+    #pollTimerId: number | NodeJS.Timeout | undefined = undefined;
     #battChar: BluetoothRemoteGATTCharacteristic | null = null;
     #v3WriteChar: BluetoothRemoteGATTCharacteristic | null = null;
     #v3NotifyChar: BluetoothRemoteGATTCharacteristic | null = null;
@@ -92,7 +93,7 @@ export class CoyoteBLE extends EventTarget {
     #chBWaveGen: WaveDataGenerator = dumyWaveGenerator;
     #chATargetLevel: number = 0;
     #chBTargetLevel: number = 0;
-    #outputTimerId: number = -1;
+    #outputTimerId: number | NodeJS.Timeout | undefined = undefined;
     #notifyBatteryLevelChangedBinded: () => void;
     #notifyV3NotifyBinded: () => void;
     #onDisconnectBinded: () => Promise<void>;
@@ -297,10 +298,10 @@ export class CoyoteBLE extends EventTarget {
     }
 
     #outputCoro() {
-        if (this.#outputTimerId >= 0) return; // another coro running
+        if (this.#outputTimerId !== undefined) return; // another coro running
         let targetMs = Date.now();
         const coro = async () => {
-            this.#outputTimerId = -1;
+            this.#outputTimerId = undefined;
             if (this.#rev === 3) {
                 // v3 packet
                 const seqId = 0b0000;

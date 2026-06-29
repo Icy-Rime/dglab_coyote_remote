@@ -1,4 +1,4 @@
-/// <reference types="@types/node" />
+import type { NodeJS } from "npm:@types/node";
 import { PromiseLock } from "../utils/lock.ts";
 
 export enum ExpireReason {
@@ -13,11 +13,18 @@ export enum ExpireReason {
 }
 
 export interface ExpirableItem {
+    /** Expire at unix time (ms) */
     expireAt: number;
 }
 
+/** Callback when item expired/deleted/overridden.
+ * return empty value or a number.
+ * if return a number, the number will be the new expire time in ms.
+ */
 export type OnExpireCallbackType<T extends ExpirableItem> = (
-    value: T,
+    /** expired item */
+    item: T,
+    /** expire reason */
     reason: ExpireReason,
 ) => number | undefined | null | void | Promise<number | undefined | null | void>;
 
@@ -211,8 +218,10 @@ export class ExpirableStore<T extends ExpirableItem> {
 
 const managedStores = new Set<ExpirableStore<ExpirableItem>>();
 
-export const createManagedExpirableStore = <T extends ExpirableItem>(): ExpirableStore<T> => {
-    const store = new ExpirableStore<T>();
+export const createManagedExpirableStore = <T extends ExpirableItem>(
+    onExpire: OnExpireCallbackType<T> = (() => undefined),
+): ExpirableStore<T> => {
+    const store = new ExpirableStore<T>(onExpire);
     managedStores.add(store as unknown as ExpirableStore<ExpirableItem>);
     return store;
 };

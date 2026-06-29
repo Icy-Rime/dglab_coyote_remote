@@ -1,7 +1,7 @@
 import { assert } from "@std/assert";
 import { FakeTime } from "@std/testing/time";
-import type { ExpirableItem } from "./expirable_store.ts"
-import { ExpireReason, ExpirableStore } from "./expirable_store.ts";
+import type { ExpirableItem } from "./expirable_store.ts";
+import { ExpirableStore, ExpireReason } from "./expirable_store.ts";
 
 // give out time slice to let the store expire
 
@@ -19,14 +19,14 @@ Deno.test("expirable_store", async (t) => {
         expireReason: ExpireReason.Unknown,
         expireAt: Date.now(),
     };
-    const onClear1 = async (value: TestValue, reason: ExpireReason) => {
+    const onClear1 = async (item: TestValue, reason: ExpireReason) => {
         clearCounter++;
-        value.expireReason = reason;
+        item.expireReason = reason;
         await time.tickAsync(1);
     };
-    const onClear2 = async (value: TestValue, reason: ExpireReason) => {
+    const onClear2 = async (item: TestValue, reason: ExpireReason) => {
         clearCounter++;
-        value.expireReason = reason;
+        item.expireReason = reason;
         await time.tickAsync(1);
         if (reason === ExpireReason.Expired) {
             return Date.now() + 1000;
