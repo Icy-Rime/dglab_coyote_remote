@@ -3,6 +3,8 @@ import { authFromRequest } from "../../controller/avatar.ts";
 import { PathPattern } from "../pattern.ts";
 import { registerRoute } from "../router.ts";
 import { response } from "../response.ts";
+import { setCookie } from "../../utils/cookie.ts";
+import { SESSION_EXPIRE_MS } from "../../data/auth.ts";
 import {
     authByCode,
     authByToken,
@@ -38,7 +40,9 @@ const handlerNewSession: RouterHandler = async (req, _params) => {
             return response(403);
         }
         const session = await createSession(avatarKey);
-        return response(200, { avatarKey: avatarKey, session: session });
+        const resp = response(200, { avatarKey: avatarKey, session: session });
+        setCookie(resp, "x-session", session, Math.floor(SESSION_EXPIRE_MS / 1000), true);
+        return resp;
     }
 };
 

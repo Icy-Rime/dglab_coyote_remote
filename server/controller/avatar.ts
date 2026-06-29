@@ -1,6 +1,7 @@
 import { authBySession } from "../data/auth.ts";
 import { hmac512Base64Verify } from "../utils/hmac.ts";
 import { env } from "../utils/env.ts";
+import { getCookies } from "../utils/cookie.ts";
 
 export interface Avatar {
     authed: boolean;
@@ -90,7 +91,8 @@ export const authFromSecondLifeRequest = async (req: Request) => {
 
 export const authFromSession = async (req: Request) => {
     const { SL_ADMIN_LIST } = getEnvVars();
-    const session = req.headers.get("x-session") ?? "";
+    const cookies = getCookies(req);
+    const session = cookies["x-session"] ?? "";
     if (session.length === 0) {
         return undefined;
     }

@@ -32,12 +32,14 @@ Deno.test("utils/test_request", async (t) => {
             new Request("http://127.0.0.1/auth/me", { "headers": { "custom": "222" } }),
         );
         assert(req.headers.get("custom") === "222");
-        assert(req.headers.has("x-session"));
+        assert(req.headers.has("cookie"));
+        assert(req.headers.get("cookie")!.indexOf("x-session") >= 0);
     });
     await t.step("makeRequest", async () => {
         const req1 = await makeRequest("/auth/me", "GET", true, false);
         assert(req1.url.indexOf("/auth/me") > 0);
-        assert(req1.headers.has("x-session"));
+        assert(req1.headers.has("cookie"));
+        assert(req1.headers.get("cookie")!.indexOf("x-session") >= 0);
         const req2 = await makeRequest("/auth/me", "GET", false, true);
         assert(req2.url.indexOf("/auth/me") > 0);
         assert(req2.headers.has("x-secondlife-owner-key"));

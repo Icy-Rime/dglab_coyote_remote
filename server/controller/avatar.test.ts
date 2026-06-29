@@ -50,7 +50,7 @@ Deno.test("avatarTest", async (t) => {
         // build request
         const req = new Request("https://127.0.0.1/auth?abc=321", {
             headers: {
-                "x-session": session,
+                "Cookie": "x-session=" + session,
             },
         });
         // request
@@ -65,7 +65,7 @@ Deno.test("avatarTest", async (t) => {
         // build request
         const req = new Request("https://127.0.0.1/auth?abc=321", {
             headers: {
-                "x-session": "what-ever-is-this-session",
+                "Cookie": "x-session=" + "what-ever-is-this-session",
             },
         });
         // request
@@ -94,7 +94,7 @@ Deno.test("avatarTest", async (t) => {
                 "x-secondlife-sign": sign,
                 "user-agent": "Second-Life-LSL/2024-10-15.11356152186 (https://secondlife.com) " +
                     env.ALLOW_SL_USER_AGENT_PART + "/1.0",
-                "x-session": session,
+                "Cookie": "x-session=" + session,
             },
         });
         // request
@@ -129,7 +129,7 @@ Deno.test("avatarTest", async (t) => {
                 "x-secondlife-sign": sign,
                 "user-agent": "Second-Life-LSL/2024-10-15.11356152186 (https://secondlife.com) " +
                     env.ALLOW_SL_USER_AGENT_PART + "/1.0",
-                "x-session": session,
+                "Cookie": "x-session=" + session,
             },
         });
         // request
@@ -162,7 +162,7 @@ Deno.test("avatarTest", async (t) => {
                 "x-secondlife-sign": sign,
                 "user-agent": "Second-Life-LSL/2024-10-15.11356152186 (https://secondlife.com) " +
                     env.ALLOW_SL_USER_AGENT_PART + "/1.0",
-                "x-session": "bad-sessions",
+                "Cookie": "x-session=" + "bad-sessions",
             },
         });
         // request

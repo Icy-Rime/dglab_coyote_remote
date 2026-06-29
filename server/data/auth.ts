@@ -7,9 +7,9 @@ import { env } from "../utils/env.ts";
 const D_AUTH_PREFIX = "auth";
 const D_BY_TOKEN = "avatar_by_token"; // auth id -> avatar key
 const D_BY_AVATAR = "token_by_avatar"; // avatar key + auth id -> auth token info
-const CODE_EXPIRE_MS = 5 * 60_000; // 5 min
-const AUTH_TOKEN_EXPIRE_MS = 7 * 24 * 3600_000; // 7 days
-const SESSION_EXPIRE_MS = 60 * 60_000; // 60 min
+export const CODE_EXPIRE_MS = 5 * 60_000; // 5 min
+export const AUTH_TOKEN_EXPIRE_MS = 7 * 24 * 3600_000; // 7 days
+export const SESSION_EXPIRE_MS = 60 * 60_000; // 60 min
 
 interface AuthTokenInfo {
     token: string;

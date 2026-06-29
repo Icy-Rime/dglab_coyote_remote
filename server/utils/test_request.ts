@@ -53,7 +53,7 @@ export const signSLRequest = async (req: Request, isAdmin: boolean = false) => {
 };
 
 export const signSessionRequest = async (req: Request, isAdmin: boolean = false) => {
-    req.headers.set("x-session", isAdmin ? ADMIN_USER_SESSION : NORMAL_USER_SESSION);
+    req.headers.set("Cookie", "x-session=" + (isAdmin ? ADMIN_USER_SESSION : NORMAL_USER_SESSION));
     return req;
 };
 

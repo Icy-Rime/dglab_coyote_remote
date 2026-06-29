@@ -140,6 +140,10 @@ Deno.test("router/route/auth", async (t) => {
         assert(data.data.avatarKey === avatarKey);
         assert(typeof data.data.session === "string");
         session = data.data.session;
+        const cookieText = resp.headers.get("Set-Cookie");
+        assert(cookieText);
+        assert(cookieText!.indexOf("x-session") >= 0);
+        assert(cookieText!.indexOf(session) >= 0);
     });
     await t.step("handlerMe4", async () => {
         const req = new Request(
@@ -147,7 +151,7 @@ Deno.test("router/route/auth", async (t) => {
             {
                 method: "GET",
                 headers: {
-                    "X-Session": session,
+                    "Cookie": "x-session=" + session,
                 },
             },
         );
@@ -164,7 +168,7 @@ Deno.test("router/route/auth", async (t) => {
             {
                 method: "GET",
                 headers: {
-                    "X-Session": session,
+                    "Cookie": "x-session=" + session,
                 },
             },
         );
