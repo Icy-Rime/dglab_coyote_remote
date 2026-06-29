@@ -3,7 +3,7 @@ import { authFromRequest } from "../../controller/avatar.ts";
 import { PathPattern } from "../pattern.ts";
 import { registerRoute } from "../router.ts";
 import { response } from "../response.ts";
-import { setCookie } from "../../utils/cookie.ts";
+import { getCookies, setCookie } from "../../utils/cookie.ts";
 import { SESSION_EXPIRE_MS } from "../../data/auth.ts";
 import {
     authByCode,
@@ -22,7 +22,16 @@ const randomSleep = () => {
 const handlerMe: RouterHandler = async (req, _params) => {
     if (req.method.toUpperCase() === "GET") {
         const avatar = await authFromRequest(req);
-        return response(200, { avatarKey: avatar.avatarKey, authenticated: avatar.authed });
+        const resp = response(200, { avatarKey: avatar.avatarKey, authenticated: avatar.authed });
+        if (avatar.authed && !avatar.fromSL) {
+            const cookies = getCookies(req);
+            const session = cookies["x-session"] ?? "";
+            if (session) {
+                // refresh cookie
+                setCookie(resp, "x-session", session, Math.floor(SESSION_EXPIRE_MS / 1000), true);
+            }
+        }
+        return resp;
     }
 };
 

@@ -33,6 +33,10 @@ Deno.test("router/route/auth", async (t) => {
         const data = (await resp.json() as { data: { avatarKey: string; authenticated: string } }).data;
         assert(data.authenticated);
         assert(data.avatarKey);
+        // should refresh session cookie
+        const cookieText = resp.headers.get("Set-Cookie") ?? "";
+        assert(cookieText.indexOf("x-session") >= 0);
+        assert(cookieText.indexOf("Max-Age") > 0);
     });
     await t.step("handlerMe3", async () => {
         const req = await makeRequest("/api/auth/me", "GET", true, true);
@@ -40,6 +44,10 @@ Deno.test("router/route/auth", async (t) => {
         const data = (await resp.json() as { data: { avatarKey: string; authenticated: string } }).data;
         assert(data.authenticated);
         assert(data.avatarKey);
+        // should not refresh session cookie
+        const cookieText = resp.headers.get("Set-Cookie") ?? "";
+        assert(cookieText.indexOf("x-session") < 0);
+        assert(cookieText.indexOf("Max-Age") < 0);
     });
     await t.step("handlerNewCode1", async () => {
         const req = await makeRequest("/api/auth/new_code", {}, false, false);
@@ -161,6 +169,11 @@ Deno.test("router/route/auth", async (t) => {
         assert(data.code == 200);
         assert(typeof data.data.authenticated);
         assert(data.data.avatarKey === avatarKey);
+        // should refresh session cookie
+        const cookieText = resp.headers.get("Set-Cookie") ?? "";
+        assert(cookieText.indexOf("x-session") >= 0);
+        assert(cookieText.indexOf("Max-Age") > 0);
+        assert(cookieText.indexOf(session) > 0);
     });
     await t.step("handlerMe4", async () => {
         const req = new Request(
