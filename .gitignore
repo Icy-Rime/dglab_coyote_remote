@@ -2,4 +2,6 @@ node_modules
 dist
 frpc.toml
 env.sh
-datakv.db
+**/*.db
+**/*.db-shm
+**/*.db-wal

@@ -1,25 +1,66 @@
-import { atom, computed } from "nanostores";
+import { atom, computed, onSet } from "nanostores";
+import { $userAuth, newSession } from "./user_auth.ts";
+import { request, RequestError } from "../utils/request.ts";
 
 interface UserInfoResponse {
-    username: string;
-    adv_expire: number;
+    avatarKey: string;
+    avatarName: string;
+    authenticated: boolean;
 }
 
 /* ==== Stores ==== */
-export const $username = atom("");
-export const $isLogined = computed($username, (un) => typeof un === "string" && un.length > 0);
+export const $canTryGetInfo = atom(true);
+export const $userInfo = atom({
+    userId: "" as string,
+    name: "" as string,
+});
+export const $isLogined = computed($userInfo, (un) => typeof un.userId === "string" && un.userId.length > 0);
+export const $username = computed($userInfo, (un) => un.name);
+export const $_inited = atom(false);
 
 /* ==== Actions ==== */
 export const expireUserInfo = () => {
-    $username.set("");
+    $userInfo.set({
+        userId: "" as string,
+        name: "" as string,
+    });
     console.log("UserInfoExpired");
 };
-export const updateUserInof = (infoResp: UserInfoResponse) => {
-    $username.set(infoResp?.username ?? "");
+export const updateUserInfo = async () => {
+    try {
+        const info = await request("/api/auth/me") as UserInfoResponse;
+        const newInfo = { ...$userInfo.get() };
+        newInfo.userId = info.authenticated ? info.avatarKey : "";
+        newInfo.name = info.avatarName;
+        $userInfo.set(newInfo);
+        return true;
+    } catch (e) {
+        if (e instanceof RequestError && e.status === 403) {
+            $canTryGetInfo.set(false);
+        }
+    }
+    return false;
 };
 
 /* ==== Events ==== */
+let oldAuthId = $userAuth.get().authId;
+onSet($userAuth, ({ newValue }) => {
+    if (newValue.authId !== oldAuthId) {
+        // update userinfo
+        $canTryGetInfo.set(true);
+        updateUserInfo().catch().then(() => {
+            oldAuthId = newValue.authId;
+        });
+    }
+});
 (async () => {
+    if (!(await updateUserInfo())) {
+        // try new session
+        if (!(await newSession())) {
+            await updateUserInfo();
+        }
+    }
+    $_inited.set(true);
     // query user info
     // const resp = await requestGet<UserInfoResponse>("/v2/user");
     // updateUserInof(resp);

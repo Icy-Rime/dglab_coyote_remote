@@ -1,25 +1,30 @@
-export const response = (code = 200, data: unknown = undefined) => {
+export type APIResponse<T> = {
+    code: number;
+    data: T;
+};
+
+export const response = <T>(code = 200, data: T | undefined = undefined) => {
     if (data === undefined) {
         switch (code) {
             case 200:
-                data = "Ok";
+                data = "Ok" as T;
                 break;
             case 400:
-                data = "Bad Request";
+                data = "Bad Request" as T;
                 break;
             case 404:
-                data = "Not Found";
+                data = "Not Found" as T;
                 break;
             case 409:
-                data = "Conflict";
+                data = "Conflict" as T;
                 break;
             default:
-                data = "";
+                data = "" as T;
                 break;
         }
     }
     return new Response(
-        JSON.stringify({ code, data }),
+        JSON.stringify({ code, data } as APIResponse<T>),
         {
             status: code,
             headers: {

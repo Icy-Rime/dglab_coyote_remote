@@ -8,6 +8,7 @@ import { HeaderNav } from "../../components/header_nav/header_nav.tsx";
 
 import { Dialog, useAlart, useConfirm, usePrompt } from "../../components/dialog/dialog.tsx";
 import { useToast } from "../../components/toast/toast.tsx";
+import { refreshAuthToken } from "../../store/user_auth.ts";
 
 export const TestPage: FunctionComponent = (_) => {
     const t = useTranslator();
@@ -53,6 +54,8 @@ export const TestPage: FunctionComponent = (_) => {
             <button type="button" onClick={() => toast("Hello Dragon 2", "success")}>Toast2</button>
             <button type="button" onClick={() => toast("Hello Dragon 3", "error")}>Toast3</button>
             <button type="button" onClick={() => toast("Hello Dragon 4", "warn")}>Toast4</button>
+            <br />
+            <button type="button" onClick={async () => await refreshAuthToken()}>Test</button>
             <Icon name="feather"></Icon>
             <Dialog isOpen={isOpen} onCancel={() => setIsOpen(false)} title="Dialog">
                 <div class="container">

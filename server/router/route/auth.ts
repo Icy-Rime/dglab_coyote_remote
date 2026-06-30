@@ -5,6 +5,7 @@ import { registerRoute } from "../router.ts";
 import { response } from "../response.ts";
 import { getCookies, setCookie } from "../../utils/cookie.ts";
 import { SESSION_EXPIRE_MS } from "../../data/auth.ts";
+import { createUser, getUser } from "../../data/user.ts";
 import {
     authByCode,
     authByToken,
@@ -19,10 +20,42 @@ const randomSleep = () => {
     return new Promise((r) => setTimeout(r, ms));
 };
 
+export interface RDataMe {
+    avatarKey: string;
+    avatarName: string;
+    authenticated: boolean;
+}
+export interface RDataNewSession {
+    avatarKey: string;
+    session: string;
+}
+export interface RDataAuthByCode {
+    avatarKey: string;
+    authId: string;
+    token: string;
+}
+export interface RDataNewCode {
+    avatarKey: string;
+    code: string;
+}
+export interface RDataRefreshAuthToken {
+    authId: string;
+    token: string;
+}
+
 const handlerMe: RouterHandler = async (req, _params) => {
     if (req.method.toUpperCase() === "GET") {
         const avatar = await authFromRequest(req);
-        const resp = response(200, { avatarKey: avatar.avatarKey, authenticated: avatar.authed });
+        await randomSleep();
+        if (!avatar.authed) {
+            return response(200, { avatarKey: "", avatarName: "", authenticated: false } as RDataMe);
+        }
+        const user = await getUser(avatar.avatarKey);
+        const resp = response(200, {
+            avatarKey: avatar.avatarKey,
+            avatarName: user?.name ?? "",
+            authenticated: avatar.authed,
+        });
         if (avatar.authed && !avatar.fromSL) {
             const cookies = getCookies(req);
             const session = cookies["x-session"] ?? "";
@@ -49,7 +82,7 @@ const handlerNewSession: RouterHandler = async (req, _params) => {
             return response(403);
         }
         const session = await createSession(avatarKey);
-        const resp = response(200, { avatarKey: avatarKey, session: session });
+        const resp = response(200, { avatarKey: avatarKey, session: session } as RDataNewSession);
         setCookie(resp, "x-session", session, Math.floor(SESSION_EXPIRE_MS / 1000), true);
         return resp;
     }
@@ -68,7 +101,7 @@ const handlerAuthByCode: RouterHandler = async (req, _params) => {
             return response(403);
         }
         const { authId, token } = await createAuthToken(avatarKey);
-        return response(200, { avatarKey: avatarKey, authId: authId, token: token });
+        return response(200, { avatarKey: avatarKey, authId: authId, token: token } as RDataAuthByCode);
     }
 };
 
@@ -79,8 +112,16 @@ const handleNewCode: RouterHandler = async (req, _params) => {
             return response(403);
         }
         await randomSleep();
+        // create user if not exist
+        const user = await getUser(avatar.avatarKey);
+        if (!user) {
+            const success = await createUser(avatar.avatarKey, avatar.avatarName!);
+            if (!success) {
+                throw Error("Failed to create user.");
+            }
+        }
         const code = await startCodeAuth(avatar.avatarKey);
-        return response(200, { avatarKey: avatar.avatarKey, code: code });
+        return response(200, { avatarKey: avatar.avatarKey, code: code } as RDataNewCode);
     }
 };
 
@@ -97,7 +138,7 @@ const handleRefreshAuthToken: RouterHandler = async (req, _params) => {
         if (!newToken) {
             return response(403);
         }
-        return response(200, { authId: authId, token: newToken });
+        return response(200, { authId: authId, token: newToken } as RDataRefreshAuthToken);
     }
 };
 

@@ -1,35 +1,57 @@
-import { expireUserInfo } from "../store/user_info.ts"
+import { API_BASE } from "../utils/app_const.ts";
 
-export const URL_BASE = "";
-
-class RequestError extends Error {
-    statusCode: number;
-    constructor(statusCode: number, message: string) {
-        super(message);
-        this.name = "Request Error";
-        this.statusCode = statusCode;
+export class RequestError extends Error {
+    subCode: number;
+    reason: string;
+    status: number;
+    constructor(msg?: string, status: number = -1, errorData: unknown = undefined) {
+        super(msg);
+        this.subCode = (errorData as { subCode?: number })?.subCode ?? -1;
+        this.reason = (errorData as { reason?: string })?.reason ?? "";
+        this.status = status;
     }
 }
 
-export const requestGet = async <T>(path: string, queries: Record<string, string | number> = {}) => {
-    const url = new URL(URL_BASE + path, globalThis.location.toString());
-    for (const key in queries) {
-        if (Object.prototype.hasOwnProperty.call(queries, key)) {
-            const element = queries[key];
-            url.searchParams.set(key, element.toString());
+export const request = async <T>(
+    apiPath: string,
+    method: "POST" | "GET" = "GET",
+    params: Record<string, string> = {},
+) => {
+    while (apiPath.startsWith("/")) {
+        apiPath = apiPath.substring(1);
+    }
+    const url = new URL(`${API_BASE}/${apiPath}`);
+    if (method === "GET") {
+        for (const k in params) {
+            if (Object.prototype.hasOwnProperty.call(params, k)) {
+                url.searchParams.set(k, params[k]);
+            }
         }
     }
+    const resp = await fetch(url, {
+        method: method,
+        body: method === "GET" ? undefined : JSON.stringify(params),
+        headers: method === "GET" ? {} : {
+            "Content-Type": "application/json",
+        },
+        credentials: "include",
+    });
+    let data = {} as unknown;
     try {
-        const resp = await fetch(url, {
-            method: "GET",
-            credentials: "same-origin",
-        });
-        if (resp.status != 200) {
-            if (resp.status === 403) expireUserInfo();
-            throw new RequestError(resp.status, await resp.text());
-        }
-        return await resp.json() as T;
-    } catch (err: unknown) {
-        throw new RequestError(-1, (err as Error)?.message ?? "");
+        data = await resp.json();
+    } catch {
+        // ignore error
+        data = {};
     }
+    if (resp.status !== 200) {
+        throw new RequestError(
+            `Failed to request: status ${resp.status}`,
+            resp.status,
+            (data as { data?: unknown })?.data,
+        );
+    }
+    if (!((data as { data?: unknown })?.data)) {
+        throw new RequestError(`Failed to parse response: ${JSON.stringify(data)}`, 200);
+    }
+    return (data as { data?: unknown })?.data as T;
 };

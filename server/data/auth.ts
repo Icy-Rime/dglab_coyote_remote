@@ -124,27 +124,6 @@ export const refreshAuthToken = wrapKvOperation(async (authId: string, token: st
         return newToken;
     }
     return "";
-    // const tokenResult = await kv.get<AuthTokenInfo>([env.APP_DB_PREFIX, D_AUTH_PREFIX, D_BY_AVATAR, avatarKey, authId]);
-    // if (tokenResult.value) {
-    //     const oldToken = tokenResult.value.token;
-    //     if (token !== oldToken) {
-    //         return "";
-    //     }
-    //     const newToken = ulid();
-    //     const kv = getKv();
-    //     const result = await kv.atomic()
-    //         .set([env.APP_DB_PREFIX, D_AUTH_PREFIX, D_BY_AVATAR, avatarKey, authId], {
-    //             token: newToken,
-    //             expireAt,
-    //         } as AuthTokenInfo, { expireIn: AUTH_TOKEN_EXPIRE_MS })
-    //         .set([env.APP_DB_PREFIX, D_AUTH_PREFIX, D_BY_TOKEN, authId], avatarKey, { expireIn: AUTH_TOKEN_EXPIRE_MS })
-    //         .commit();
-    //     if (!result.ok) {
-    //         throw new KVRetry("refresh auth token failed");
-    //     }
-    //     return newToken;
-    // }
-    // return "";
 });
 
 export const createSession = async (avatarKey: string) => {
