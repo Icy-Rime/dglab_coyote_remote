@@ -118,5 +118,5 @@ onSet($userAuth, (_) => {
         if (!$failedToRefresh.get()) {
             refreshAuthToken();
         }
-    }, 30 * 60 * 1000);
+    }, 8 * 60 * 60 * 1000);
 })();

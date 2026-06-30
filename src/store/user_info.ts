@@ -61,7 +61,9 @@ onSet($userAuth, ({ newValue }) => {
         }
     }
     $_inited.set(true);
-    // query user info
-    // const resp = await requestGet<UserInfoResponse>("/v2/user");
-    // updateUserInof(resp);
+    setInterval(() => {
+        if ($canTryGetInfo.get()) {
+            updateUserInfo();
+        }
+    }, 20 * 60 * 1000); // refresh to keep session
 })();
