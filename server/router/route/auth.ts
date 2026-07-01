@@ -4,7 +4,7 @@ import { PathPattern } from "../pattern.ts";
 import { registerRoute } from "../router.ts";
 import { response } from "../response.ts";
 import { getCookies, setCookie } from "../../utils/cookie.ts";
-import { SESSION_EXPIRE_MS } from "../../data/auth.ts";
+import { expireSession, expireToken, SESSION_EXPIRE_MS } from "../../data/auth.ts";
 import { createUser, getUser } from "../../data/user.ts";
 import {
     authByCode,
@@ -42,6 +42,27 @@ export interface RDataRefreshAuthToken {
     authId: string;
     token: string;
 }
+
+const handlerLogout: RouterHandler = async (req, _params) => {
+    if (req.method.toUpperCase() === "POST") {
+        const avatar = await authFromRequest(req);
+        await randomSleep();
+        if (avatar.authed) {
+            const params = await req.json() as { authId?: string; token?: string };
+            if (params.authId && params.token) {
+                await expireToken(params.authId, params.token);
+            }
+            const cookies = getCookies(req);
+            const session = cookies["x-session"] ?? "";
+            if (session) {
+                await expireSession(session);
+            }
+        }
+        const resp = response(200, {});
+        setCookie(resp, "x-session", "", 0, true);
+        return resp;
+    }
+};
 
 const handlerMe: RouterHandler = async (req, _params) => {
     if (req.method.toUpperCase() === "GET") {
@@ -143,6 +164,7 @@ const handleRefreshAuthToken: RouterHandler = async (req, _params) => {
 };
 
 export default () => {
+    registerRoute(new PathPattern("/api/auth/logout"), handlerLogout);
     registerRoute(new PathPattern("/api/auth/me"), handlerMe);
     registerRoute(new PathPattern("/api/auth/new_session"), handlerNewSession);
     registerRoute(new PathPattern("/api/auth/auth_by_code"), handlerAuthByCode);

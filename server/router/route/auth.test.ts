@@ -224,5 +224,29 @@ Deno.test("router/route/auth", async (t) => {
         assert(token !== data.data.token);
         token = data.data.token;
     });
+    await t.step("handlerLogout", async () => {
+        const req = new Request(
+            "http://127.0.0.1:8080/api/auth/logout",
+            {
+                method: "POST",
+                body: JSON.stringify({
+                    authId: authId,
+                    token: token,
+                }),
+                headers: {
+                    "Cookie": "x-session=" + session,
+                },
+            },
+        );
+        const resp = await handler(req, srv);
+        assert(resp.status === 200);
+        const data = await resp.json() as APIResponse<{}>;
+        assert(data.code == 200);
+        // should refresh session cookie
+        const cookieText = resp.headers.get("Set-Cookie") ?? "";
+        assert(cookieText.indexOf("x-session") >= 0);
+        assert(cookieText.indexOf("Max-Age") > 0);
+        assert(cookieText.indexOf(session) < 0);
+    });
     await cleanTestRequestEnv();
 });

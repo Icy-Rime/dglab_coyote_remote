@@ -29,9 +29,10 @@ const sessionStore = createManagedExpirableStore<SessionInfo>(); // session key 
 
 const randomAuthCode = () => {
     // generate 16 random hex number
-    const arr = new Uint8Array(8);
+    const CODE_CHAR = "0123456789";
+    const arr = new Uint8Array(16);
     globalThis.crypto.getRandomValues(arr);
-    const code = Array.from(arr).map((v) => v.toString(16).padStart(2, "0")).join("").toUpperCase();
+    const code = Array.from(arr).map((v) => CODE_CHAR[v % CODE_CHAR.length]).join("").toUpperCase();
     return code;
 };
 
@@ -104,7 +105,6 @@ export const refreshAuthToken = wrapKvOperation(async (authId: string, token: st
             avatarKey,
             authId,
         ]);
-        const oldToken = tokenResult.value?.token;
         if (tokenResult.value?.token !== token || tokenResult.value.expireAt < Date.now()) {
             return "";
         }
@@ -139,6 +139,44 @@ export const authBySession = async (sessionId: string) => {
         return session.avatarKey;
     }
     return undefined;
+};
+
+export const expireToken = wrapKvOperation(async (authId: string, token: string) => {
+    const kv = getKv();
+    const avatarKeyResult = await kv.get<string>([env.APP_DB_PREFIX, D_AUTH_PREFIX, D_BY_TOKEN, authId]);
+    if (avatarKeyResult.value) {
+        const avatarKey = avatarKeyResult.value;
+        const tokenResult = await kv.get<AuthTokenInfo>([
+            env.APP_DB_PREFIX,
+            D_AUTH_PREFIX,
+            D_BY_AVATAR,
+            avatarKey,
+            authId,
+        ]);
+        if (tokenResult.value?.token !== token) {
+            return false;
+        }
+        const result = await kv.atomic()
+            .check(avatarKeyResult)
+            .check(tokenResult)
+            .delete([env.APP_DB_PREFIX, D_AUTH_PREFIX, D_BY_AVATAR, avatarKey, authId])
+            .delete([env.APP_DB_PREFIX, D_AUTH_PREFIX, D_BY_TOKEN, authId])
+            .commit();
+        if (!result.ok) {
+            throw new KVRetry("expire auth token failed");
+        }
+        return true;
+    }
+    return false;
+});
+
+export const expireSession = async (sessionId: string) => {
+    const session = await sessionStore.get(sessionId);
+    if (session) {
+        await sessionStore.delete(sessionId); // refresh expire time
+        return true;
+    }
+    return false;
 };
 
 export const expireAllAuth = wrapKvOperation(async (avatarKey: string) => {

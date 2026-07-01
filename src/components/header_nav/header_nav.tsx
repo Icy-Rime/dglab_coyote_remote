@@ -1,6 +1,6 @@
 import type { FunctionComponent, HTMLAttributes } from "preact";
 import { useMemo } from "preact/hooks";
-import { useLocation } from "wouter-preact";
+import { useLocation } from "../../hooks/router.ts";
 import { useMergedClassName } from "../utils.ts";
 import { Icon } from "../icon/icon.tsx";
 import { setDrawerNavOpen } from "../../store/browser_var.ts";
@@ -12,8 +12,8 @@ export type HeaderNavProps = HTMLAttributes<HTMLDivElement> & {
 export const HeaderNav: FunctionComponent<HeaderNavProps> = (props: HeaderNavProps) => {
     const [_, setLocation] = useLocation();
     const className = useMergedClassName("mysite_header_nav_container", props.class);
-    const goHome = useMemo((() => () => setLocation("/")), [setLocation]);
-    const openDrawerNav = useMemo((() => () => setDrawerNavOpen(true)), [setDrawerNavOpen]);
+    const goHome = useMemo(() => () => setLocation("/"), [setLocation]);
+    const openDrawerNav = useMemo(() => () => setDrawerNavOpen(true), [setDrawerNavOpen]);
     return (
         <div {...props} class={className}>
             <div class="mysite_header_nav_icon_wrap" onClick={goHome}>

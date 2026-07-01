@@ -1,9 +1,10 @@
 import { assert } from "@std/assert";
 import { FakeTime } from "@std/testing/time";
 import { closeKv, initKv } from "./kv.ts";
-import { authByCode, expireAllAuth, startCodeAuth } from "./auth.ts";
+import { authByCode, startCodeAuth } from "./auth.ts";
 import { authByToken, createAuthToken, refreshAuthToken } from "./auth.ts";
 import { authBySession, createSession } from "./auth.ts";
+import { expireAllAuth, expireSession, expireToken } from "./auth.ts";
 import { closeAllManagedExpirableStore } from "./expirable_store.ts";
 
 Deno.test("data/auth", async (t) => {
@@ -58,6 +59,18 @@ Deno.test("data/auth", async (t) => {
         assert(await authBySession(session) === avatarKey);
         // test expire
         time.tick(70 * 60_000);
+        assert(await authBySession(session) === undefined);
+    });
+    await t.step("expireToken", async () => {
+        const authInfo = await createAuthToken(avatarKey);
+        // test expire
+        await expireToken(authInfo.authId, authInfo.token);
+        assert(await authByToken(authInfo.authId, authInfo.token) === undefined);
+    });
+    await t.step("expireSession", async () => {
+        const session = await createSession(avatarKey);
+        // test expire
+        await expireSession(session);
         assert(await authBySession(session) === undefined);
     });
     await t.step("expireAllAuth", async () => {

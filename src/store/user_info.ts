@@ -47,10 +47,20 @@ let oldAuthId = $userAuth.get().authId;
 onSet($userAuth, ({ newValue }) => {
     if (newValue.authId !== oldAuthId) {
         // update userinfo
-        $canTryGetInfo.set(true);
-        updateUserInfo().catch().then(() => {
+        if (newValue.authId.length > 0) {
+            $canTryGetInfo.set(true);
+            updateUserInfo().catch().then(() => {
+                oldAuthId = newValue.authId;
+            });
+        } else {
+            // clear if no authId
+            $canTryGetInfo.set(false);
+            $userInfo.set({
+                userId: "",
+                name: "",
+            });
             oldAuthId = newValue.authId;
-        });
+        }
     }
 });
 (async () => {

@@ -15,7 +15,7 @@ const getCurrentColorScheme = () => {
     return "light" as ThemeType;
 };
 
-export const $theme = persistentAtom<ThemeType>("_theme_", getCurrentColorScheme(), { listen: false });
+export const $theme = persistentAtom<ThemeType>("_theme_", getCurrentColorScheme());
 
 onSet($theme, ({ newValue }) => {
     // set theme for page
@@ -80,9 +80,16 @@ export const setDrawerNavOpen = (value: boolean) => {
     $drawerNavOpen.set(value);
 };
 
-/* ==== Debug ==== */ 
+/* ==== Loading ==== */
+export const $pageLoading = atom(false);
+
+export const setPageLoading = (value: boolean) => {
+    $pageLoading.set(value);
+};
+
+/* ==== Debug ==== */
 const $debugInner = persistentAtom<"true" | "false">("_debug_", "false");
-export const $debug = computed($debugInner, value => value === "true");
+export const $debug = computed($debugInner, (value) => value === "true");
 
 export const setDebug = (newValue: boolean) => {
     $debugInner.set(newValue ? "true" : "false");

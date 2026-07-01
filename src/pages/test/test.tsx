@@ -4,11 +4,10 @@ import { setDebug, setLang, setTheme } from "../../store/browser_var.ts";
 import type { FunctionComponent } from "preact";
 import { FooterRecord } from "../../components/footer_record/footer_record.tsx";
 import { Icon } from "../../components/icon/icon.tsx";
-import { HeaderNav } from "../../components/header_nav/header_nav.tsx";
 
 import { Dialog, useAlart, useConfirm, usePrompt } from "../../components/dialog/dialog.tsx";
 import { useToast } from "../../components/toast/toast.tsx";
-import { refreshAuthToken } from "../../store/user_auth.ts";
+import { authByCode } from "../../store/user_auth.ts";
 
 export const TestPage: FunctionComponent = (_) => {
     const t = useTranslator();
@@ -20,7 +19,6 @@ export const TestPage: FunctionComponent = (_) => {
     // const d = useDialog();
     return (
         <>
-            <HeaderNav></HeaderNav>
             <button type="button" onClick={() => setIsOpen(true)}>Open</button>
             <button
                 type="button"
@@ -55,7 +53,17 @@ export const TestPage: FunctionComponent = (_) => {
             <button type="button" onClick={() => toast("Hello Dragon 3", "error")}>Toast3</button>
             <button type="button" onClick={() => toast("Hello Dragon 4", "warn")}>Toast4</button>
             <br />
-            <button type="button" onClick={async () => await refreshAuthToken()}>Test</button>
+            <button
+                type="button"
+                onClick={async () => {
+                    const code = await prompt("Auth Code");
+                    if (code) {
+                        await authByCode(code);
+                    }
+                }}
+            >
+                Auth By Code
+            </button>
             <Icon name="feather"></Icon>
             <Dialog isOpen={isOpen} onCancel={() => setIsOpen(false)} title="Dialog">
                 <div class="container">

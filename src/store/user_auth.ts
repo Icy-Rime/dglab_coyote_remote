@@ -9,6 +9,7 @@ export const $userAuth = persistentJSON("userAuth", {
     updateUnixMs: Date.now() as number,
 }, { listen: true });
 export const $busyPromise = atom(Promise.resolve());
+export const $_inited = atom(false);
 const $failedToRefresh = atom(false);
 
 /* ==== Actions ==== */
@@ -70,12 +71,15 @@ export const authByCode = async (code: string) => {
         $failedToRefresh.set(true);
         return false;
     }
+    await jsonPost("/api/auth/new_session", {
+        authId: data.data.authId,
+        token: data.data.token,
+    });
     $userAuth.set({
         authId: data.data.authId,
         token: data.data.token,
         updateUnixMs: Date.now(),
     });
-    await newSession();
     return true;
 };
 
@@ -103,17 +107,35 @@ export const newSession = async () => {
     return true;
 };
 
+export const logout = async () => {
+    const info = $userAuth.get();
+    const resp = await jsonPost("/api/auth/logout", {
+        authId: info.authId,
+        token: info.token,
+    });
+    if (resp.status !== 200) {
+        return false;
+    }
+    $userAuth.set({
+        authId: "",
+        token: "",
+        updateUnixMs: Date.now(),
+    });
+    return true;
+};
+
 /* ==== Events ==== */
 onSet($userAuth, (_) => {
     $failedToRefresh.set(false);
 });
-(() => {
+(async () => {
     // refresh token task
     const now = Date.now();
     const last = $userAuth.get().updateUnixMs;
     if (now - last >= 1 * 24 * 3600_000) {
-        refreshAuthToken(); // refresh once
+        await refreshAuthToken(); // refresh once
     }
+    $_inited.set(true);
     setInterval(() => {
         if (!$failedToRefresh.get()) {
             refreshAuthToken();
