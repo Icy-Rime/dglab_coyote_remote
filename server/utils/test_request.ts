@@ -60,7 +60,7 @@ export const signSessionRequest = async (req: Request, isAdmin: boolean = false)
 
 export const makeRequest = async (
     path: string = "/",
-    params: "GET" | Record<string, string> = "GET",
+    params: "GET" | Record<string, string | number | boolean> = "GET",
     isAdmin: boolean = false,
     fromSL: boolean = false,
 ) => {
