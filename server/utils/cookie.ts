@@ -15,12 +15,15 @@ const checkCookieName = (name: string) => {
     return true;
 };
 
-export const setCookie = (resp: Response, name: string, value: string, maxAge = -1, httpOnly = true) => {
+export const setCookie = (resp: Response, name: string, value: string, path = "", maxAge = -1, httpOnly = true) => {
     if (!checkCookieName(name)) {
         throw Error("Cookie name contains special character.");
     }
     const valueText = encodeURIComponent(value);
     let cookieText = `${name}=${valueText}`;
+    if (path) {
+        cookieText = cookieText + `; Path=${encodeURI(path)}`;
+    }
     if (maxAge >= 0) {
         cookieText = cookieText + `; Max-Age=${maxAge.toString()}`;
     }

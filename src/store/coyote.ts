@@ -92,8 +92,9 @@ export const connectToEventSource = () => {
         return false;
     }
     localStorage.setItem("_entry_name_", entryName);
-    const url = "/api/listen/" + entryName;
-    const eventSource = new EventSource(url);
+    const url = "/api/event/subscribe/" + entryName;
+    const eventSource = new EventSource(url, { withCredentials: true });
+    console.log("connect event source...");
     eventSource.addEventListener("message", (evt) => {
         console.log("message:", evt.data);
         if (!$device.get()?.connected) {

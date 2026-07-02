@@ -6,6 +6,7 @@
         "watch": "ESBUILD_BINARY_PATH=./node_modules/esbuild_bin/esbuild deno run --allow-run=./node_modules/esbuild_bin/esbuild --allow-read=. --deny-read=$HOME/.ssh,$HOME/.gitconfig,./env.sh --allow-write=./dist --allow-env=ESBUILD_BINARY_PATH scripts/build.ts --watch",
         "release": "ESBUILD_BINARY_PATH=./node_modules/esbuild_bin/esbuild deno run --allow-run=./node_modules/esbuild_bin/esbuild --allow-read=. --deny-read=$HOME/.ssh,$HOME/.gitconfig,./env.sh --allow-write=./dist --allow-env=ESBUILD_BINARY_PATH scripts/build.ts --release",
         "serve": "deno serve --watch --allow-read=dist,datakv.db,server/router/route --allow-write=datakv.db --allow-env=APP_DB_PREFIX,SL_REQUEST_SIGN_KEY,ALLOW_SL_USER_AGENT_PART,SL_ADMIN_LIST server/api.ts",
+        "admin": "deno run --allow-read=datakv.db --allow-write=datakv.db --allow-env=APP_DB_PREFIX,SL_REQUEST_SIGN_KEY,ALLOW_SL_USER_AGENT_PART,SL_ADMIN_LIST scripts/admin.ts",
         "test": "deno test --ignore=src/pages --allow-read=server/router/route --allow-env=APP_DB_PREFIX,SL_REQUEST_SIGN_KEY,ALLOW_SL_USER_AGENT_PART,SL_ADMIN_LIST",
     },
     "unstable": ["kv"],

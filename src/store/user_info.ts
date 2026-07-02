@@ -64,10 +64,13 @@ onSet($userAuth, ({ newValue }) => {
     }
 });
 (async () => {
-    if (!(await updateUserInfo())) {
+    const success = await updateUserInfo();
+    if ((!success) || !($isLogined.get())) {
         // try new session
-        if (!(await newSession())) {
-            await updateUserInfo();
+        if ($userAuth.get().authId) {
+            if (await newSession()) {
+                await updateUserInfo();
+            }
         }
     }
     $_inited.set(true);

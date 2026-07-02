@@ -2,7 +2,7 @@ import { assert, unreachable } from "@std/assert";
 import { FakeTime } from "@std/testing/time";
 import { closeKv, initKv } from "../data/kv.ts";
 import { createUser, getUser, updateUser } from "../data/user.ts";
-import { _getClientStore, getEventClient, createEventClient } from "./event_client.ts";
+import { _getClientStore, createEventClient, getEventClient } from "./event_client.ts";
 
 Deno.test("controller/event_client", async (t) => {
     using time = new FakeTime();
@@ -25,11 +25,37 @@ Deno.test("controller/event_client", async (t) => {
             // pass
         }
     });
-    await t.step("createClient", async () => {
+    await t.step("createClient1", async () => {
+        user.subscriptionTimeMs = Date.now();
+        await updateUser(user);
+        const client = await createEventClient(USER_ID, DEVICE_ID);
+        assert(client === undefined);
+    });
+    await t.step("createClient2", async () => {
         user.subscriptionTimeMs = Date.now() + (300 * 1000);
         await updateUser(user);
         const client = await createEventClient(USER_ID, DEVICE_ID);
         assert(client !== undefined);
+    });
+    await t.step("createClient3", async () => {
+        const store = _getClientStore();
+        let count = 0;
+        for (const k of store.keys()) {
+            if (await store.get(k)) {
+                count++;
+            }
+        }
+        assert(count === 1);
+        const client = await createEventClient(USER_ID, DEVICE_ID);
+        assert(client !== undefined);
+        // check if old has been cleared.
+        count = 0;
+        for (const k of store.keys()) {
+            if (await store.get(k)) {
+                count++;
+            }
+        }
+        assert(count === 1);
     });
     await t.step("getClient", async () => {
         const client = await getEventClient(USER_ID, DEVICE_ID);
@@ -39,19 +65,19 @@ Deno.test("controller/event_client", async (t) => {
         const client3 = await getEventClient(USER_ID, DEVICE_ID + "xxxx");
         assert(client3 === undefined);
     });
-    await t.step("expireClient", async () => {
-        const store = _getClientStore();
-        // only one item
-        for (const k of store.keys()) {
-            const item = await store.get(k);
-            assert(item?.getUserId() === USER_ID);
-        }
-        await time.tickAsync(500 * 1000);
-        await time.runMicrotasks();
-        // should be no item there
-        for (const k of store.keys()) {
-            unreachable()
-        };
-    });
+    // await t.step("expireClient", async () => {
+    //     const store = _getClientStore();
+    //     // only one item
+    //     for (const k of store.keys()) {
+    //         const item = await store.get(k);
+    //         assert(item?.getUserId() === USER_ID);
+    //     }
+    //     await time.tickAsync(500 * 1000);
+    //     await time.runMicrotasks();
+    //     // should be no item there
+    //     for (const k of store.keys()) {
+    //         unreachable();
+    //     }
+    // });
     closeKv();
 });

@@ -4,11 +4,12 @@ import { getCookies, setCookie } from "./cookie.ts";
 Deno.test("utils/cookie", async (t) => {
     await t.step("setCookie", async () => {
         const resp = new Response("", { status: 200 });
-        setCookie(resp, "x-session", "Hello World", 0, true);
+        setCookie(resp, "x-session", "Hello World", "/app", 0, true);
         const cookieText = resp.headers.get("Set-Cookie");
         assert(cookieText);
         assert(cookieText.toLowerCase().indexOf("httponly") > 0);
         assert(cookieText.toLowerCase().indexOf("max-age") > 0);
+        assert(cookieText.toLowerCase().indexOf("path") > 0);
     });
     await t.step("getCookies", async () => {
         const req = new Request("http://127.0.0.1", {

@@ -3,8 +3,9 @@ import { hmac512Base64Sign } from "./hmac.ts";
 import { closeKv, initKv } from "../data/kv.ts";
 import { createSession } from "../data/auth.ts";
 import { closeAllManagedExpirableStore } from "../data/expirable_store.ts";
-const NORMAL_USER_UUID = "12345678-e1a3-4422-ae62-78dd110c4b86";
-const ADMIN_USER_UUID = "f09f9a28-e1a3-4422-ae62-78dd110c4b86";
+export const USER_NAME = "Test User";
+export const NORMAL_USER_UUID = "12345678-e1a3-4422-ae62-78dd110c4b86";
+export const ADMIN_USER_UUID = "f09f9a28-e1a3-4422-ae62-78dd110c4b86";
 let NORMAL_USER_SESSION = "";
 let ADMIN_USER_SESSION = "";
 
@@ -31,7 +32,7 @@ export const makeServeHandlerInfo = (hostname: string = "127.0.0.1", port: numbe
 
 export const signSLRequest = async (req: Request, isAdmin: boolean = false) => {
     const avatarKey = isAdmin ? ADMIN_USER_UUID : NORMAL_USER_UUID;
-    const avatarName = "Test User";
+    const avatarName = USER_NAME;
     const signRand = "randomstring" + Math.random().toFixed(4);
     const url = new URL(req.url);
     const signTime = new Date().toISOString();

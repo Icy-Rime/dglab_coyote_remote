@@ -62,11 +62,14 @@ export const handler: Deno.ServeHandler = async (req, _) => {
         }
     }
     if (canServeStatic && req.method.toUpperCase() === "GET") {
-        return await serveDir(req, {
+        const resp = await serveDir(req, {
             urlRoot: "",
             fsRoot: STATIC_DIR,
             showDirListing: true,
         });
+        resp.headers.set("Access-Control-Allow-Origin", `${url.protocol}//${url.host}`);
+        resp.headers.set("Access-Control-Allow-Credentials", "true");
+        return resp;
     }
     return response(404);
 };

@@ -59,7 +59,7 @@ const handlerLogout: RouterHandler = async (req, _params) => {
             }
         }
         const resp = response(200, {});
-        setCookie(resp, "x-session", "", 0, true);
+        setCookie(resp, "x-session", "", "", 0, true);
         return resp;
     }
 };
@@ -82,7 +82,7 @@ const handlerMe: RouterHandler = async (req, _params) => {
             const session = cookies["x-session"] ?? "";
             if (session) {
                 // refresh cookie
-                setCookie(resp, "x-session", session, Math.floor(SESSION_EXPIRE_MS / 1000), true);
+                setCookie(resp, "x-session", session, "/api", Math.floor(SESSION_EXPIRE_MS / 1000), false);
             }
         }
         return resp;
@@ -104,7 +104,7 @@ const handlerNewSession: RouterHandler = async (req, _params) => {
         }
         const session = await createSession(avatarKey);
         const resp = response(200, { avatarKey: avatarKey, session: session } as RDataNewSession);
-        setCookie(resp, "x-session", session, Math.floor(SESSION_EXPIRE_MS / 1000), true);
+        setCookie(resp, "x-session", session, "/api", Math.floor(SESSION_EXPIRE_MS / 1000), false);
         return resp;
     }
 };
