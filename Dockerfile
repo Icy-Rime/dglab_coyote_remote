@@ -1,4 +1,4 @@
-ARG DENO_IMAGE_VERSION=2.6.8
+ARG DENO_IMAGE_VERSION=2.9.1
 ARG BASE_DENO_IMAGE=hub.1panel.dev/denoland/deno:distroless-$DENO_IMAGE_VERSION
 
 FROM $BASE_DENO_IMAGE AS build_static
@@ -9,14 +9,14 @@ ENV NPM_CONFIG_REGISTRY="https://registry.npmmirror.com"
 # install deps
 COPY ./deno.jsonc ./deno.jsonc
 RUN ["deno", "install"]
-COPY ./scripts/build.ts ./scripts/build.ts
+COPY ./scripts/install_esbuild.ts ./scripts/install_esbuild.ts
 RUN ["deno", "task", "install_deps"]
 
 # compile static
 COPY ./src ./src
 COPY ./static ./static
 COPY ./scripts ./scripts
-RUN ["deno", "task", "docker_build"]
+RUN ["deno", "task", "release"]
 
 # ==============================================================================
 # the runtime
@@ -27,7 +27,7 @@ ENV NPM_CONFIG_REGISTRY="https://registry.npmmirror.com"
 
 COPY ./deno.jsonc ./deno.jsonc
 COPY ./server ./server
-RUN ["deno", "cache", "./server/api.ts"]
+RUN ["deno", "install", "-e", "./server"]
 COPY --from=build_static /app/dist ./dist
 
 # The port that your application listens to.
