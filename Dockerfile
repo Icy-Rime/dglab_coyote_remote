@@ -32,7 +32,7 @@ COPY --from=build_static /app/dist ./dist
 
 # The port that your application listens to.
 EXPOSE 18970
-CMD ["deno", "serve", "--allow-read=dist,datakv.db,server/router/route", "--allow-write=datakv.db", "--allow-env=APP_DB_PREFIX,SL_REQUEST_SIGN_KEY,ALLOW_SL_USER_AGENT_PART,SL_ADMIN_LIST", "server/api.ts"]
+CMD ["serve", "--port", "18970", "--allow-read=dist,datakv.db,server/router/route", "--allow-write=datakv.db", "--allow-env=APP_DB_PREFIX,SL_REQUEST_SIGN_KEY,ALLOW_SL_USER_AGENT_PART,SL_ADMIN_LIST", "server/api.ts"]
 
 # docker buildx build -t dglab_coyote_remote . && docker run -p 18970:18970 -it --rm dglab_coyote_remote
 # podman build -t dglab_coyote_remote . && podman run -p 18970:18970 -it --rm dglab_coyote_remote
