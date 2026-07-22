@@ -44,6 +44,33 @@ Deno.test("avatarTest", async (t) => {
         assertEquals(avatar.fromSL, true);
         assertEquals(avatar.isAdmin, true);
     });
+    await t.step("authFromSecondLifeBetaGridRequestTest", async () => {
+        // build a request
+        const avatarKey = ADMIN_USER_UUID;
+        const avatarName = "Test User";
+        const signRand = "randomstring" + Math.random().toFixed(4);
+        const url = new URL("https://127.0.0.1/auth?abc=321");
+        const signTime = new Date().toISOString();
+        const sign = await hmac512Base64Sign(
+            avatarKey + env.SL_REQUEST_SIGN_KEY,
+            avatarKey + url.pathname + url.search + signTime + signRand,
+        );
+        const req = new Request(url, {
+            headers: {
+                "x-secondlife-owner-key": avatarKey,
+                "x-secondlife-owner-name": avatarName,
+                "x-secondlife-sign-rand": signRand,
+                "x-secondlife-sign-time": signTime,
+                "x-secondlife-sign": sign,
+                "x-secondlife-shard": "testing",
+                "user-agent": "Second-Life-LSL/2024-10-15.11356152186 (https://secondlife.com) " +
+                    env.ALLOW_SL_USER_AGENT_PART + "/1.0",
+            },
+        });
+        // request
+        const avatar = await authFromSecondLifeRequest(req);
+        assert(avatar === undefined); // undefined.
+    });
     await t.step("authFromSessionTest", async () => {
         const avatarKey = "f09f9a28-e1a3-4422-ae62-78dd110c4b00";
         const session = await createSession(avatarKey);

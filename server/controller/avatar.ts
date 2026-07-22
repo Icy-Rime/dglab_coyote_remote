@@ -42,6 +42,12 @@ export const authFromSecondLifeRequest = async (req: Request) => {
     const signTime = headers.get("x-secondlife-sign-time") ?? "";
     const sign = headers.get("x-secondlife-sign") ?? "";
     const userAgent = headers.get("user-agent") ?? "";
+    const shard = headers.get("x-secondlife-shard") ?? "";
+    if (shard.toLowerCase() === "testing") {
+        // not for test grid!
+        // console.log("ignore request from test grid. " + headers.toString());
+        return undefined;
+    }
     const url = new URL(req.url);
     // check empty header
     const allHeaders = [

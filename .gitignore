@@ -6,3 +6,4 @@ env.sh
 **/*.db
 **/*.db-shm
 **/*.db-wal
+**/*.env
