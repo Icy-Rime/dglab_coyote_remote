@@ -72,6 +72,9 @@ export const $lang = persistentAtom<LanguageCode>("_lang_", getDefaultLanguage()
 export const setLang = (newValue: LanguageCode) => {
     $lang.set(newValue);
 };
+export const i18nText = (text: TextRecord) => {
+    return text[$lang.get()] ?? text["en"];
+};
 
 /* ==== Drawer Nav Open ==== */
 export const $drawerNavOpen = atom(false);

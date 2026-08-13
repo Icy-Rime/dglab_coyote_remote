@@ -7,7 +7,12 @@ import { Icon } from "../../components/icon/icon.tsx";
 
 import { Dialog, useAlart, useConfirm, usePrompt } from "../../components/dialog/dialog.tsx";
 import { useToast } from "../../components/toast/toast.tsx";
-import { authByCode } from "../../store/user_auth.ts";
+import { CoyoteBLEDevice } from "../../store/devices/coyote_ble.ts";
+import { useStore } from "@nanostores/preact";
+
+const dev = new CoyoteBLEDevice("");
+// @ts-ignore
+window["dev"] = dev;
 
 export const TestPage: FunctionComponent = (_) => {
     const t = useTranslator();
@@ -16,7 +21,7 @@ export const TestPage: FunctionComponent = (_) => {
     const prompt = usePrompt();
     const confirm = useConfirm();
     const alert = useAlart();
-    // const d = useDialog();
+    const devStatusText = useStore(dev.statusText);
     return (
         <>
             <button type="button" onClick={() => setIsOpen(true)}>Open</button>
@@ -56,13 +61,11 @@ export const TestPage: FunctionComponent = (_) => {
             <button
                 type="button"
                 onClick={async () => {
-                    const code = await prompt("Auth Code");
-                    if (code) {
-                        await authByCode(code);
-                    }
+                    await dev.selectDevice();
+                    await dev.connectDevice();
                 }}
             >
-                Auth By Code
+                {devStatusText ? devStatusText : "Test BLE"}
             </button>
             <Icon name="feather"></Icon>
             <Dialog isOpen={isOpen} onCancel={() => setIsOpen(false)} title="Dialog">

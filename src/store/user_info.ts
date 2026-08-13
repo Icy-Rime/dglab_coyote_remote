@@ -33,6 +33,7 @@ export const updateUserInfo = async () => {
         newInfo.userId = info.authenticated ? info.avatarKey : "";
         newInfo.name = info.avatarName;
         $userInfo.set(newInfo);
+        $canTryGetInfo.set(true);
         return true;
     } catch (e) {
         if (e instanceof RequestError && e.status === 403) {
@@ -64,19 +65,22 @@ onSet($userAuth, ({ newValue }) => {
     }
 });
 (async () => {
-    const success = await updateUserInfo();
-    if ((!success) || !($isLogined.get())) {
-        // try new session
-        if ($userAuth.get().authId) {
-            if (await newSession()) {
-                await updateUserInfo();
+    const tryRefreshSession = async () => {
+        const success = await updateUserInfo();
+        if ((!success) || !($isLogined.get())) {
+            // try new session
+            if ($userAuth.get().authId) {
+                if (await newSession()) {
+                    await updateUserInfo();
+                }
             }
         }
-    }
+    };
+    await tryRefreshSession();
     $_inited.set(true);
     setInterval(() => {
         if ($canTryGetInfo.get()) {
-            updateUserInfo();
+            tryRefreshSession();
         }
     }, 20 * 60 * 1000); // refresh to keep session
 })();
