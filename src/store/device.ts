@@ -53,7 +53,7 @@ class EventChannel {
     }
 }
 
-abstract class Device {
+export abstract class Device {
     #eventChannel: EventChannel;
     #commandQueue: string[] = [];
     #isProcessing: boolean = false;
@@ -63,7 +63,7 @@ abstract class Device {
     configString: WritableAtom<string> = atom("");
     constructor(deviceId: string, _configString: string = "") {
         this.#eventChannel = new EventChannel(deviceId);
-        this.#eventChannel.source.subscribe((source) => {
+        this.#eventChannel.source.listen((source) => {
             if (source) {
                 // subscribe to message event when source changed
                 source.addEventListener("message", (event) => {
