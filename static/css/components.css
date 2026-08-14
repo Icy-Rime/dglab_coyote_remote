@@ -154,6 +154,8 @@
 }
 
 .tinyui_dialog_header_close {
+    padding: 0;
+    margin-left: var(--pico-spacing);
     cursor: pointer;
     border-radius: var(--pico-border-radius);
     border: none;
