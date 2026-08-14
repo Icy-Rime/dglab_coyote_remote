@@ -88,6 +88,7 @@ export enum LevelAdjustType {
 export type LevelAdjust = [LevelAdjustType, number]; // adjust type, value
 export interface WaveDataGenerator {
     generateV3Wave: () => WaveSeq;
+    // TODO: generateV2Wave
 }
 const v3PackWave = (
     seq: number,
@@ -252,6 +253,9 @@ export class CoyoteBLEDevice extends BLEDevice {
     // export functions
     async updateConfig(newConfig: CoyoteDeviceConfig) {
         this.#cfg = newConfig;
+        if (newConfig.deviceId !== this.getDeviceId()) {
+            this._setDeviceId(newConfig.deviceId);
+        }
         if (this.#deviceVersion === CoyoteVersion.V3) {
             await this.#v3UpdateLimitAndBalance();
         }

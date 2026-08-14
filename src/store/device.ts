@@ -100,11 +100,17 @@ export abstract class Device {
         this.#eventChannel.close();
     }
 
-    setDeviceId(deviceId: string) {
+    _setDeviceId(deviceId: string) {
         this.#eventChannel.deviceId.set(deviceId);
     }
 
+    getDeviceId() {
+        return this.#eventChannel.deviceId.get();
+    }
+
     abstract onRemoteCommand(command: string): void | Promise<void>;
+    abstract connectDevice(): boolean | Promise<boolean>;
+    abstract closeDevice(): void | Promise<void>;
 }
 
 export abstract class BLEDevice extends Device {
@@ -115,10 +121,18 @@ export abstract class BLEDevice extends Device {
         super(deviceId, _configString);
     }
 
-    closeDevice() {
-        this.bleDevice?.forget?.();
-        this.bleDevice = undefined;
-        this.closeGattServer();
+    async selectDevice() {
+        if (!(navigator?.bluetooth?.requestDevice)) {
+            return false;
+        }
+        this.closeDevice();
+        try {
+            const device = await navigator.bluetooth.requestDevice(this.defineBLEDeviceFilter());
+            this.bleDevice = device;
+            return true;
+        } catch {
+            return false;
+        }
     }
 
     closeGattServer() {
@@ -135,19 +149,18 @@ export abstract class BLEDevice extends Device {
         this.deviceStatus.set(DeviceStatus.DISCONNECTED);
     }
 
-    async selectDevice() {
-        if (!(navigator?.bluetooth?.requestDevice)) {
-            return false;
-        }
-        this.closeDevice();
-        const device = await navigator.bluetooth.requestDevice(this.defineBLEDeviceFilter());
-        this.bleDevice = device;
-        return true;
+    override closeDevice() {
+        // this.bleDevice?.forget?.();
+        // this.bleDevice = undefined;
+        this.closeGattServer();
     }
 
-    async connectDevice() {
+    override async connectDevice() {
         if (!this.bleDevice?.gatt) {
-            return false;
+            await this.selectDevice();
+            if (!this.bleDevice?.gatt) {
+                return false;
+            }
         }
         this.closeGattServer();
         this.deviceStatus.set(DeviceStatus.CONNECTING);

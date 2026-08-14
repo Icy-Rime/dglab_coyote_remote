@@ -3,26 +3,33 @@ import { atom } from "nanostores";
 import { Device } from "./device.ts";
 import { CoyoteBLEDevice } from "./devices/coyote_ble.ts";
 
-enum DeviceType {
+enum SavedDeviceType {
     COYOTE_BLE = "coyote_ble",
 }
 
 interface SavedDevice {
-    deviceType: DeviceType;
+    deviceType: SavedDeviceType;
     configString: string;
 }
 
-const newDevice = (deviceType: string, configString: string) => {
+const newDevice = (deviceType: SavedDeviceType, configString: string): Device | undefined => {
     switch (deviceType) {
-        case DeviceType.COYOTE_BLE:
+        case SavedDeviceType.COYOTE_BLE:
             return new CoyoteBLEDevice(configString);
     }
     return undefined;
 };
 
+const deviceToType = (device: Device): SavedDeviceType => {
+    if (device instanceof CoyoteBLEDevice) {
+        return SavedDeviceType.COYOTE_BLE;
+    }
+    throw new Error("Invalid device type");
+};
+
 /* ==== Stores ==== */
-export const $savedDeviceTopId = persistentAtom<string>("saved_device_top_id", "1");
-export const $savedDevices = persistentJSON<Record<string, SavedDevice>>("saved_devices", {});
+const $savedDeviceTopId = persistentAtom<string>("saved_device_top_id", "1");
+const $savedDevices = persistentJSON<Record<string, SavedDevice>>("saved_devices", {});
 export const $savedDeviceIds = atom<string[]>(Object.keys($savedDevices.get()));
 const devices = (() => {
     const m = new Map<string, Device>();
@@ -59,11 +66,12 @@ const newDeviceId = () => {
     return idText;
 };
 
-export const addSavedDevice = (deviceType: DeviceType, configString: string = "") => {
-    const dev = newDevice(deviceType, configString);
-    if (dev === undefined) {
-        throw new Error("Invalid device type");
-    }
+export const newSavedDevice = <T extends Device>(
+    deviceType: new (config: string) => T,
+    configString: string = "",
+) => {
+    const dev = new deviceType(configString);
+    const deviceTypeText = deviceToType(dev);
     let newId = newDeviceId();
     while ($savedDevices.get()[newId]) {
         newId = newDeviceId();
@@ -75,7 +83,7 @@ export const addSavedDevice = (deviceType: DeviceType, configString: string = ""
     $savedDevices.set({
         ...$savedDevices.get(),
         [newId]: {
-            deviceType,
+            deviceType: deviceTypeText,
             configString: "",
         },
     });
