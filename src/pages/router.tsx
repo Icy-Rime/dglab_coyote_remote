@@ -1,7 +1,6 @@
 import { Route, Router } from "wouter-preact";
 import { useHashLocation } from "wouter-preact/use-hash-location";
 import { TestPage } from "./test/test.tsx";
-import { ControllerPage } from "./controller/controller.tsx";
 import { DevicesPage } from "./devices/devices.tsx";
 import { LoginPage } from "./login/login.tsx";
 import { RedirectPage } from "./redirect/redirect.tsx";
