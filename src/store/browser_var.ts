@@ -84,6 +84,28 @@ export const setDrawerNavOpen = (value: boolean) => {
 };
 
 /* ==== Loading ==== */
+let lockSentinel: WakeLockSentinel | undefined = undefined;
+export const $wakeLockAcquired = atom(false);
+
+export const acquireWakeLock = async () => {
+    if (lockSentinel) {
+        lockSentinel.release();
+    }
+    lockSentinel = await navigator.wakeLock?.request("screen");
+    lockSentinel.addEventListener("release", () => {
+        lockSentinel = undefined;
+        $wakeLockAcquired.set(false);
+    });
+    $wakeLockAcquired.set(lockSentinel !== undefined);
+};
+
+export const releaseWakeLock = () => {
+    lockSentinel?.release();
+    lockSentinel = undefined;
+    $wakeLockAcquired.set(false);
+};
+
+/* ==== Loading ==== */
 export const $pageLoading = atom(false);
 
 export const setPageLoading = (value: boolean) => {

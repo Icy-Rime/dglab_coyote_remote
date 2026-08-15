@@ -55,24 +55,30 @@ class EventChannel {
 
 export abstract class Device {
     #eventChannel: EventChannel;
+    #eventSourceListenerController: AbortController;
     #commandQueue: string[] = [];
     #isProcessing: boolean = false;
+    deviceId: WritableAtom<string>;
     remoteStatus: WritableAtom<RemoteStatus>;
     deviceStatus: WritableAtom<DeviceStatus> = atom(DeviceStatus.DISCONNECTED);
     statusText: WritableAtom<string> = atom("");
     configString: WritableAtom<string> = atom("");
     constructor(deviceId: string, _configString: string = "") {
+        this.#eventSourceListenerController = new AbortController();
         this.#eventChannel = new EventChannel(deviceId);
         this.#eventChannel.source.listen((source) => {
             if (source) {
                 // subscribe to message event when source changed
+                this.#eventSourceListenerController.abort();
+                this.#eventSourceListenerController = new AbortController();
                 source.addEventListener("message", (event) => {
                     // when message received, add to queue
                     this.#commandQueue.push(event.data);
                     this.#processCommandQueue(); // process queue async
-                });
+                }, { signal: this.#eventSourceListenerController.signal });
             }
         });
+        this.deviceId = this.#eventChannel.deviceId;
         this.remoteStatus = this.#eventChannel.status;
     }
 
@@ -98,14 +104,6 @@ export abstract class Device {
 
     closeEventChannel() {
         this.#eventChannel.close();
-    }
-
-    _setDeviceId(deviceId: string) {
-        this.#eventChannel.deviceId.set(deviceId);
-    }
-
-    getDeviceId() {
-        return this.#eventChannel.deviceId.get();
     }
 
     abstract onRemoteCommand(command: string): void | Promise<void>;
@@ -156,13 +154,17 @@ export abstract class BLEDevice extends Device {
     }
 
     override async connectDevice() {
+        // not support reuse device
+        // if (!this.bleDevice?.gatt) {
+        //     await this.selectDevice();
+        //     if (!this.bleDevice?.gatt) {
+        //         return false;
+        //     }
+        // }
+        await this.selectDevice();
         if (!this.bleDevice?.gatt) {
-            await this.selectDevice();
-            if (!this.bleDevice?.gatt) {
-                return false;
-            }
+            return false;
         }
-        this.closeGattServer();
         this.deviceStatus.set(DeviceStatus.CONNECTING);
         try {
             this.bleGattServer = await this.bleDevice.gatt.connect();

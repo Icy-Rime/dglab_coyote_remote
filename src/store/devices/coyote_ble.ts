@@ -1,7 +1,8 @@
 /// <reference types="npm:@types/web-bluetooth"/>
-import { atom } from "nanostores";
+import { atom, computed } from "nanostores";
+import type { ReadableAtom, WritableAtom } from "nanostores";
 import { i18nText } from "../../store/browser_var.ts";
-import { BLEDevice } from "../device.ts";
+import { BLEDevice, DeviceStatus } from "../device.ts";
 enum CoyoteVersion {
     UNKNOWN = 0,
     V2 = 2,
@@ -22,15 +23,22 @@ const PRIMARY_SERVICES = [
     V3_PRIMARY_SERVICE, // v3
 ]; // 服务id
 
+const DEFAULT_DEVICE_CHANNEL_CONFIG = {
+    levelLimit: 200,
+    balanceFreq: 160,
+    balancePow: 0,
+    zapLevel: 10,
+    zapDuration: 2,
+    lowLevel: 5,
+    middleLevel: 10,
+    highLevel: 15,
+};
+export type CoyoteDeviceChannelConfig = typeof DEFAULT_DEVICE_CHANNEL_CONFIG;
 const DEFAULT_DEVICE_CONFIG = {
     version: 1,
     deviceId: DEFAULT_DEVICE_ID,
-    limitChA: 200,
-    limitChB: 200,
-    balanceFreqChA: 160,
-    balanceFreqChB: 160,
-    balancePowChA: 0,
-    balancePowChB: 0,
+    chA: structuredClone(DEFAULT_DEVICE_CHANNEL_CONFIG) as CoyoteDeviceChannelConfig,
+    chB: structuredClone(DEFAULT_DEVICE_CHANNEL_CONFIG) as CoyoteDeviceChannelConfig,
 };
 const DEFAULT_DEVICE_CONFIG_STRING = JSON.stringify(DEFAULT_DEVICE_CONFIG);
 export type CoyoteDeviceConfig = typeof DEFAULT_DEVICE_CONFIG;
@@ -63,18 +71,19 @@ const ensureDeviceConfig = (configString: string) => {
     return config as CoyoteDeviceConfig;
 };
 
-type CoyoteDeviceStatus = {
-    batteryLevel: number;
-    levelChA: number; // 0~200. <0 means disabled.
-    levelChB: number; // 0~200. <0 means disabled.
+const DEFAULT_DEVICE_CHANNEL_STATUS = {
+    level: -1, // 0~200. <0 means disabled.
 };
+export type CoyoteDeviceChannelStatus = typeof DEFAULT_DEVICE_CHANNEL_STATUS;
+const DEFAULT_DEVICE_STATUS = {
+    batteryLevel: 0,
+    chA: structuredClone(DEFAULT_DEVICE_CHANNEL_STATUS) as CoyoteDeviceChannelStatus,
+    chB: structuredClone(DEFAULT_DEVICE_CHANNEL_STATUS) as CoyoteDeviceChannelStatus,
+};
+export type CoyoteDeviceStatus = typeof DEFAULT_DEVICE_STATUS;
 
 const newCoyoteDeviceStatus = () => {
-    return {
-        batteryLevel: 0,
-        levelChA: -1,
-        levelChB: -1,
-    } as CoyoteDeviceStatus;
+    return structuredClone(DEFAULT_DEVICE_STATUS);
 };
 
 export type WaveFrame = [number, number]; // freq, level
@@ -115,33 +124,43 @@ const defaultWaveGenerator: WaveDataGenerator = {
         // return [[240, 50], [10, 100], [240, 50], [10, 100]]; // viberating
     },
 };
+const emptyWaveGenerator: WaveDataGenerator = {
+    generateV3Wave: () => {
+        return [[0, 0], [0, 0], [0, 0], [0, 0]];
+    },
+};
 
 export class CoyoteBLEDevice extends BLEDevice {
-    #cfg: CoyoteDeviceConfig;
+    #cfg: WritableAtom<CoyoteDeviceConfig>;
     #lastBLEDevice: BluetoothDevice | undefined = undefined;
     #deviceVersion: CoyoteVersion = CoyoteVersion.UNKNOWN;
     #v3CmdChar: BluetoothRemoteGATTCharacteristic | undefined = undefined;
-    status = atom(newCoyoteDeviceStatus());
+    #sts: WritableAtom<CoyoteDeviceStatus>;
+    config: ReadableAtom<CoyoteDeviceConfig>;
+    status: ReadableAtom<CoyoteDeviceStatus>;
     constructor(configString: string = DEFAULT_DEVICE_CONFIG_STRING) {
         const config = ensureDeviceConfig(configString);
         super(config.deviceId);
-        this.#cfg = config;
-        this.status.set(newCoyoteDeviceStatus());
+        this.#cfg = atom(config);
+        this.#sts = atom(newCoyoteDeviceStatus());
+        this.config = computed(this.#cfg, (cfg) => structuredClone(cfg));
+        this.status = computed(this.#sts, (sts) => structuredClone(sts));
         this.statusText.set(i18nText({ zh: "未连接", en: "Disconnected" }));
     }
     async #v3UpdateLimitAndBalance() {
         if (this.#deviceVersion === CoyoteVersion.V3 && this.#v3CmdChar) {
             const buffer = new ArrayBuffer(7);
             const dv = new DataView(buffer);
-            const cfg = this.#cfg;
+            const cfg = this.#cfg.get();
             dv.setUint8(0, 0xBF);
-            dv.setUint8(1, cfg.limitChA);
-            dv.setUint8(2, cfg.limitChB);
-            dv.setUint8(3, cfg.balanceFreqChA);
-            dv.setUint8(4, cfg.balanceFreqChB);
-            dv.setUint8(5, cfg.balancePowChA);
-            dv.setUint8(6, cfg.balancePowChB);
+            dv.setUint8(1, cfg.chA.levelLimit);
+            dv.setUint8(2, cfg.chB.levelLimit);
+            dv.setUint8(3, cfg.chA.balanceFreq);
+            dv.setUint8(4, cfg.chB.balanceFreq);
+            dv.setUint8(5, cfg.chA.balancePow);
+            dv.setUint8(6, cfg.chB.balancePow);
             await this.#v3CmdChar.writeValueWithoutResponse(buffer);
+            console.log("update limit and balance");
         }
     }
     #startOutputTask() {
@@ -150,21 +169,21 @@ export class CoyoteBLEDevice extends BLEDevice {
             if (signal.aborted) {
                 return;
             }
-            const status = this.status.get();
-            if (status.levelChA < 0 && status.levelChB < 0) {
+            const status = this.#sts.get();
+            if (status.chA.level < 0 && status.chB.level < 0) {
                 return; // no output
             }
-            let lvA = status.levelChA;
-            let lvB = status.levelChB;
-            lvA = Math.max(0, Math.min(200, lvA));
-            lvB = Math.max(0, Math.min(200, lvB));
+            let lvA = status.chA.level;
+            let lvB = status.chB.level;
+            lvA = Math.max(-1, Math.min(200, lvA));
+            lvB = Math.max(-1, Math.min(200, lvB));
             if (this.#deviceVersion === CoyoteVersion.V3 && this.#v3CmdChar) {
                 const packet = v3PackWave(
                     0,
                     [LevelAdjustType.SET, lvA],
                     [LevelAdjustType.SET, lvB],
-                    defaultWaveGenerator.generateV3Wave(),
-                    defaultWaveGenerator.generateV3Wave(),
+                    lvA >= 0 ? defaultWaveGenerator.generateV3Wave() : emptyWaveGenerator.generateV3Wave(),
+                    lvB >= 0 ? defaultWaveGenerator.generateV3Wave() : emptyWaveGenerator.generateV3Wave(),
                 );
                 await this.#v3CmdChar.writeValueWithoutResponse(packet);
             }
@@ -194,7 +213,7 @@ export class CoyoteBLEDevice extends BLEDevice {
             this.#lastBLEDevice = this.bleDevice;
         }
         // init ble device status
-        const status = { ...this.status.get() };
+        const status = { ...this.#sts.get() };
         // init battery services
         const battService = await this.bleGattServer!.getPrimaryService(BATTERY_SERVICE);
         const battChar = await battService.getCharacteristic(BATTERY_CHARACTERICT);
@@ -202,7 +221,7 @@ export class CoyoteBLEDevice extends BLEDevice {
         const battCallback = async (_: unknown) => {
             try {
                 const batteryLevel = (await battChar.readValue())?.getUint8(0) ?? 0;
-                this.status.set({ ...this.status.get(), batteryLevel });
+                this.#sts.set({ ...this.#sts.get(), batteryLevel });
                 console.log("battery level changed:", batteryLevel);
             } finally {
                 if (this.bleListenerAbortController.signal.aborted) {
@@ -232,17 +251,18 @@ export class CoyoteBLEDevice extends BLEDevice {
         // start output task
         this.#startOutputTask();
         // update status
-        this.status.set(status);
+        this.#sts.set(status);
         this.statusText.set(i18nText({ zh: "连接成功", en: "Connected" }));
+        if (this.#deviceVersion !== CoyoteVersion.V3) {
+            this.statusText.set(
+                i18nText({ zh: "连接成功 (不支持，仅支持V3.0)", en: "Connected (not supported, only support V3.0)" }),
+            );
+        }
         console.log("onGattServerConnected", status);
     }
     override onGattServerDisconnected(): void {
-        const newStatus = { ...this.status.get() };
         // reset status
-        newStatus.batteryLevel = 0;
-        newStatus.levelChA = -1;
-        newStatus.levelChB = -1;
-        this.status.set(newStatus);
+        this.#sts.set(newCoyoteDeviceStatus());
         this.#v3CmdChar = undefined;
         console.log("onGattServerDisconnected");
         this.statusText.set(i18nText({ zh: "未连接", en: "Disconnected" }));
@@ -252,23 +272,43 @@ export class CoyoteBLEDevice extends BLEDevice {
     }
     // export functions
     async updateConfig(newConfig: CoyoteDeviceConfig) {
-        this.#cfg = newConfig;
-        if (newConfig.deviceId !== this.getDeviceId()) {
-            this._setDeviceId(newConfig.deviceId);
+        const oldConfig = this.#cfg.get();
+        this.#cfg.set(newConfig);
+        this.configString.set(JSON.stringify(this.#cfg.get()));
+        if (newConfig.deviceId !== this.deviceId.get()) {
+            this.deviceId.set(newConfig.deviceId);
         }
         if (this.#deviceVersion === CoyoteVersion.V3) {
-            await this.#v3UpdateLimitAndBalance();
+            let changed = false;
+            changed = changed || oldConfig.chA.levelLimit !== newConfig.chA.levelLimit;
+            changed = changed || oldConfig.chB.levelLimit !== newConfig.chB.levelLimit;
+            changed = changed || oldConfig.chA.balanceFreq !== newConfig.chA.balanceFreq;
+            changed = changed || oldConfig.chB.balanceFreq !== newConfig.chB.balanceFreq;
+            changed = changed || oldConfig.chA.balancePow !== newConfig.chA.balancePow;
+            changed = changed || oldConfig.chB.balancePow !== newConfig.chB.balancePow;
+            if (changed) {
+                await this.#v3UpdateLimitAndBalance();
+            }
         }
-        this.configString.set(JSON.stringify(this.#cfg));
     }
     /** set level of channel A, -1: disable, 0-200: enable */
     setLevelA(level: number) {
+        if (this.deviceStatus.get() !== DeviceStatus.CONNECTED) {
+            return;
+        }
         level = Math.max(-1, Math.min(200, level));
-        this.status.set({ ...this.status.get(), levelChA: level });
+        const status = { ...this.#sts.get() };
+        status.chA.level = level;
+        this.#sts.set(status);
     }
     /** set level of channel B, -1: disable, 0-200: enable */
     setLevelB(level: number) {
+        if (this.deviceStatus.get() !== DeviceStatus.CONNECTED) {
+            return;
+        }
         level = Math.max(-1, Math.min(200, level));
-        this.status.set({ ...this.status.get(), levelChB: level });
+        const status = { ...this.#sts.get() };
+        status.chB.level = level;
+        this.#sts.set(status);
     }
 }
