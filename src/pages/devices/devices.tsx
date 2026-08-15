@@ -11,6 +11,7 @@ import { $isLogined } from "../../store/user_info.ts";
 import { getSavedDevice, newSavedDevice, removeSavedDevice } from "../../store/saved_devices.ts";
 import { Icon } from "../../components/icon/icon.tsx";
 import { CoyoteBLESettingsDialog } from "./settings/coyote_ble.tsx";
+import { ScreenSaverOverlay } from "./screen_saver.tsx";
 
 const emptyText = atom("");
 const emptyRemoteStatus = atom(RemoteStatus.CLOSED);
@@ -130,13 +131,29 @@ const DeviceCard: FunctionComponent<{ savedDeviceId: string }> = ({ savedDeviceI
 
 export const DevicesPage: FunctionComponent = (_) => {
     const t = useTranslator();
+    const [isScreenSaverOpen, setIsScreenSaverOpen] = useState(false);
     const savedDeviceIds = useStore($savedDeviceIds);
+
+    const closeScreenSaver = useCallback(() => {
+        setIsScreenSaverOpen(false);
+    }, [setIsScreenSaverOpen]);
+
     return (
         <div style="width: 100%; overflow-y: auto; display: flex; flex-direction: column; align-items: center; justify-content: top;">
             {savedDeviceIds.map((savedDeviceId) => <DeviceCard key={savedDeviceId} savedDeviceId={savedDeviceId} />)}
-            <button style="margin: var(--pico-spacing) 0;" onClick={addDevice}>
+            <button style="margin: var(--pico-spacing) 0; display: flex; align-items: center;" onClick={addDevice}>
                 {t({ zh: "添加设备", en: "Add Device" })}
+                <Icon name="plus" style="margin-left: var(--pico-spacing);" />
             </button>
+            <button
+                style="margin-bottom: var(--pico-spacing); display: flex; align-items: center;"
+                onClick={() =>
+                    setIsScreenSaverOpen((prev) => !prev)}
+            >
+                {t({ zh: "屏幕保护", en: "Screen Saver" })}
+                <Icon name="smartphone" style="margin-left: var(--pico-spacing);" />
+            </button>
+            <ScreenSaverOverlay isOpen={isScreenSaverOpen} onClose={closeScreenSaver} />
         </div>
     );
 };
