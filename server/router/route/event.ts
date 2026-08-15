@@ -18,7 +18,7 @@ const handleSubscribeDevice: RouterHandler = async (req, params) => {
         }
         const client = await createEventClient(user, device);
         if (!client) {
-            return response(403);
+            return response(402);
         }
         return client.makeResponse();
     }

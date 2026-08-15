@@ -12,6 +12,12 @@ export const response = <T>(code = 200, data: T | undefined = undefined) => {
             case 400:
                 data = "Bad Request" as T;
                 break;
+            case 402:
+                data = "Payment Required" as T;
+                break;
+            case 403:
+                data = "Forbidden" as T;
+                break;
             case 404:
                 data = "Not Found" as T;
                 break;

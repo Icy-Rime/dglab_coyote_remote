@@ -31,8 +31,8 @@ const DeviceCard: FunctionComponent<{ savedDeviceId: string }> = ({ savedDeviceI
     const deviceStatus = useStore(device?.deviceStatus ?? emptyDeviceStatus);
 
     /* Actions */
-    const actionConnect = useCallback(() => {
-        device?.connectDevice();
+    const actionConnect = useCallback(async () => {
+        await device?.connectDevice();
         if ($isLogined.get()) {
             // TODO: check if device with same id already connected.
             device?.connectEventChannel();
@@ -147,8 +147,7 @@ export const DevicesPage: FunctionComponent = (_) => {
             </button>
             <button
                 style="margin-bottom: var(--pico-spacing); display: flex; align-items: center;"
-                onClick={() =>
-                    setIsScreenSaverOpen((prev) => !prev)}
+                onClick={() => setIsScreenSaverOpen((prev) => !prev)}
             >
                 {t({ zh: "屏幕保护", en: "Screen Saver" })}
                 <Icon name="smartphone" style="margin-left: var(--pico-spacing);" />
