@@ -32,6 +32,8 @@ const DeviceCard: FunctionComponent<{ savedDeviceId: string }> = ({ savedDeviceI
 
     /* Actions */
     const actionConnect = useCallback(async () => {
+        device?.closeEventChannel();
+        await device?.closeDevice();
         await device?.connectDevice();
         if ($isLogined.get()) {
             // TODO: check if device with same id already connected.
