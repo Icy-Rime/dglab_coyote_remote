@@ -4,6 +4,7 @@ import { PathPattern } from "../pattern.ts";
 import { registerRoute } from "../router.ts";
 import { response } from "../response.ts";
 import { createUser, getUser, updateUser } from "../../data/user.ts";
+import { logger } from "../../utils/logger.ts";
 
 export type RDataTryVip = {
     succeed: boolean;
@@ -43,8 +44,10 @@ const handleTryVip: RouterHandler = async (req, _params) => {
         // update vip time
         user.subscriptionTimeMs = Date.now() + (30 * 60_000);
         if (!(await updateUser(user))) {
-            return response(200, { succeed: false, subscriptionTimeMs: user.subscriptionTimeMs } as RDataTryVip);
+            logger.info("user_vip:", "try_vip failed", last);
+            return response(200, { succeed: false, subscriptionTimeMs: last } as RDataTryVip);
         }
+        logger.info("user_vip:", "try_vip success", user.subscriptionTimeMs);
         return response(200, { succeed: true, subscriptionTimeMs: user.subscriptionTimeMs } as RDataTryVip);
     }
 };
@@ -86,8 +89,10 @@ const handleAddVipTime: RouterHandler = async (req, _params) => {
         const baseTime = Math.max(user.subscriptionTimeMs, Date.now());
         user.subscriptionTimeMs = baseTime + (increasement * 1000);
         if (await updateUser(user)) {
+            logger.info("user_vip:", "add_vip_time success", user.subscriptionTimeMs);
             return response(200, { succeed: true } as RDataAddVip);
         }
+        logger.info("user_vip:", "add_vip_time failed", baseTime);
         return response(200, { succeed: false } as RDataAddVip);
     }
 };

@@ -9,7 +9,8 @@ const main = async () => {
     const k = ["dglab_remote", "users", "dfd80b41-e24e-4c6f-bcbf-232e28f99d19"];
     const result = await kv.get(k);
     console.log(result.value);
-    (result.value as any).subscriptionTimeMs = Date.now() + 5 * 60_000;
+    (result.value as any).subscriptionTimeMs = Date.now() + 60 * 60_000;
+    console.log("new time:", new Date((result.value as any).subscriptionTimeMs).toLocaleString());
     await kv.set(k, result.value);
     // end
     closeKv();
