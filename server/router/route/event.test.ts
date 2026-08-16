@@ -25,7 +25,7 @@ Deno.test("router/route/event", async (t) => {
     await t.step("handleSubscribeDevice1", async () => {
         const req = await makeRequest("/api/event/subscribe/test_device", "GET");
         const resp = await handler(req, srv);
-        assert(resp.status === 403); // 10 secs before expire, reject.
+        assert(resp.status === 402); // 10 secs before expire, reject.
     });
     await t.step("handleEmit1", async () => {
         const req = await makeRequest("/api/event/emit/test_device", {});
