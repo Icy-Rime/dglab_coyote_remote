@@ -269,6 +269,40 @@ export class CoyoteBLEDevice extends BLEDevice {
     }
     override onRemoteCommand(command: string): void | Promise<void> {
         console.log("onRemoteCommand", command);
+        const cmds = command.split("⌂");
+        if (cmds.length <= 0) return;
+        const action = cmds[0];
+        const cfg = this.#cfg.get();
+        switch (action) {
+            case "coyote_zap":
+                this.setLevelA(cfg.chA.zapLevel);
+                this.setLevelB(cfg.chB.zapLevel);
+                setTimeout(() => {
+                    this.setLevelA(-1);
+                }, cfg.chA.zapDuration * 1000);
+                setTimeout(() => {
+                    this.setLevelB(-1);
+                }, cfg.chB.zapDuration * 1000);
+                break;
+            case "coyote_low":
+                this.setLevelA(cfg.chA.lowLevel);
+                this.setLevelB(cfg.chB.lowLevel);
+                break;
+            case "coyote_middle":
+                this.setLevelA(cfg.chA.middleLevel);
+                this.setLevelB(cfg.chB.middleLevel);
+                break;
+            case "coyote_high":
+                this.setLevelA(cfg.chA.highLevel);
+                this.setLevelB(cfg.chB.highLevel);
+                break;
+            case "coyote_off":
+                this.setLevelA(-1);
+                this.setLevelB(-1);
+                break;
+            default:
+                break;
+        }
     }
     // export functions
     async updateConfig(newConfig: CoyoteDeviceConfig) {
