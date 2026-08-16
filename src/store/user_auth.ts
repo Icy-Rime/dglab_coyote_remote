@@ -136,9 +136,13 @@ onSet($userAuth, (_) => {
         await refreshAuthToken(); // refresh once
     }
     $_inited.set(true);
-    setInterval(() => {
-        if (!$failedToRefresh.get()) {
-            refreshAuthToken();
+    setInterval(async () => {
+        const now = Date.now();
+        const last = $userAuth.get().updateUnixMs;
+        if (now - last >= 1 * 24 * 3600_000) {
+            if (!$failedToRefresh.get()) {
+                await refreshAuthToken(); // refresh once
+            }
         }
     }, 8 * 60 * 60 * 1000);
 })();
