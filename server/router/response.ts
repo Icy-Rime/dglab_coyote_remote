@@ -36,7 +36,7 @@ export const response = <T>(code = 200, data: T | undefined = undefined) => {
             headers: {
                 // "Access-Control-Allow-Origin": "*",
                 // "Content-Type": "text/plain",
-                "Content-Type": "application/json",
+                "Content-Type": "application/json; charset=utf-8",
             },
         },
     );
