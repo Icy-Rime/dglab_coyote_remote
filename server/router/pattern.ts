@@ -53,15 +53,18 @@ export class PathPattern {
                 const fieldName = pattern.substring(2, tmpIdx);
                 if (pattern.startsWith(":*")) {
                     pathArgs[fieldName] = pathParts[pathIndex];
+                    pathArgs[fieldName] = decodeURIComponent(pathArgs[fieldName]);
                     pathIndex += 1;
                 } else if (pattern.startsWith(":~")) {
                     pathArgs[fieldName] = pathParts.slice(pathIndex, pathParts.length).join("/");
+                    pathArgs[fieldName] = decodeURIComponent(pathArgs[fieldName]);
                     pathIndex = pathParts.length;
                 } else if (pattern.startsWith(":>")) {
                     const pat = pattern.substring(tmpIdx + 1);
                     const part = pathParts[pathIndex];
                     if (part.startsWith(pat)) {
                         pathArgs[fieldName] = part.substring(pat.length);
+                        pathArgs[fieldName] = decodeURIComponent(pathArgs[fieldName]);
                     } else {
                         return [undefined, undefined]; // not matched
                     }
@@ -71,6 +74,7 @@ export class PathPattern {
                     const part = pathParts[pathIndex];
                     if (part.endsWith(pat)) {
                         pathArgs[fieldName] = part.substring(0, part.length - pat.length);
+                        pathArgs[fieldName] = decodeURIComponent(pathArgs[fieldName]);
                     } else {
                         return [undefined, undefined]; // not matched
                     }
