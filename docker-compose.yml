@@ -1,4 +1,3 @@
-version: '2.0'
 services:
   dglab_coyote_remote:
     build: .
@@ -6,6 +5,9 @@ services:
     mem_limit: 512m
     ports:
       - "127.0.0.1:18970:18970"
+    volumes:
+      - ./datakv.db:/app/datakv.db
+      - ./log:/app/log
     env_file:
       - 1panel.env
     logging:
@@ -13,3 +15,5 @@ services:
         options:
             max-file: "2"
             max-size: "10m"
+
+# v2026.8.17 v3
