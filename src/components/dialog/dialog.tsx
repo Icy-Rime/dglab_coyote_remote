@@ -75,16 +75,22 @@ export const useDialog = (props: DialogHookProps) => {
                             )}
 
                         <div class="tinyui_dialog_body">{props.children}</div>
-                        {(typeof props.footer === "boolean" && props.footer === false) ? null :
-                            <footer class="tinyui_dialog_footer">
-                                {props.footer ? props.footer : (
-                                    <>
-                                        <button type="button" class="secondary" onClick={onCancel}>{t.cancel}</button>
-                                        <button type="button" class="primary" onClick={onConfirm}>{t.confirm}</button>
-                                    </>
-                                )}
-                            </footer>
-                        }
+                        {(typeof props.footer === "boolean" && props.footer === false)
+                            ? null
+                            : (
+                                <footer class="tinyui_dialog_footer">
+                                    {props.footer ? props.footer : (
+                                        <>
+                                            <button type="button" class="secondary" onClick={onCancel}>
+                                                {t.cancel}
+                                            </button>
+                                            <button type="button" class="primary" onClick={onConfirm}>
+                                                {t.confirm}
+                                            </button>
+                                        </>
+                                    )}
+                                </footer>
+                            )}
                     </article>
                 </div>
             </>
@@ -145,10 +151,16 @@ export const usePrompt = () => {
     const inputRef = useRef<HTMLInputElement | null>(null);
     const onConfirm = useMemo(() => () => {
         resolveRef.current(inputRef.current?.value ?? "");
+        if (inputRef.current?.value) {
+            inputRef.current.value = "";
+        }
     }, [resolveRef, inputRef]);
     const onCancel = useMemo(() => () => {
         resolveRef.current(undefined);
-    }, [resolveRef]);
+        if (inputRef.current?.value) {
+            inputRef.current.value = "";
+        }
+    }, [resolveRef, inputRef]);
     const dlg = useDialog({
         title: title,
         showCloseButton: false,
